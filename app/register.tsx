@@ -1,6 +1,8 @@
 import { Link } from "expo-router";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { useState } from "react";
-import { Image, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function LoginScreen() {
 	const [name, setName] = useState("");
@@ -57,15 +59,15 @@ export default function LoginScreen() {
 
 					<View style={styles.socialButtonsContainer}>
 						<TouchableOpacity style={styles.socialButton}>
-							<Image source={require("../assets/images/favicon.png")} style={styles.socialIcon} />
+							<FontAwesome size={28} name="google" />
 						</TouchableOpacity>
 
 						<TouchableOpacity style={styles.socialButton}>
-							<Image source={require("../assets/images/favicon.png")} style={styles.socialIcon} />
+							<FontAwesome size={28} name="facebook" />
 						</TouchableOpacity>
 
 						<TouchableOpacity style={styles.socialButton}>
-							<Image source={require("../assets/images/favicon.png")} style={styles.socialIcon} />
+							<FontAwesome5 size={28} name="fingerprint" />
 						</TouchableOpacity>
 					</View>
 

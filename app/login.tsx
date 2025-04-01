@@ -1,14 +1,24 @@
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useState } from "react";
-import { Image, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import { SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function LoginScreen() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
 
+	const router = useRouter();
+
 	const togglePasswordVisibility = () => {
 		setShowPassword(!showPassword);
+	};
+
+	const login = () => {
+		setTimeout(() => {
+			router.navigate("/(tabs)/home");
+		}, 500);
 	};
 
 	return (
@@ -32,7 +42,7 @@ export default function LoginScreen() {
 					<View style={styles.passwordContainer}>
 						<TextInput style={styles.passwordInput} placeholder="••••••••••••" value={password} onChangeText={setPassword} secureTextEntry={!showPassword} />
 						<TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIcon}>
-							{/* <Ionicons name={showPassword ? "eye" : "eye-off"} size={24} color="#A0A0A0" /> */}
+							<FontAwesome5 name={showPassword ? "eye" : "eye-slash"} size={24} color="#A0A0A0" />
 						</TouchableOpacity>
 					</View>
 
@@ -50,15 +60,15 @@ export default function LoginScreen() {
 
 					<View style={styles.socialButtonsContainer}>
 						<TouchableOpacity style={styles.socialButton}>
-							<Image source={require("../assets/images/favicon.png")} style={styles.socialIcon} />
+							<FontAwesome size={28} name="google" />
 						</TouchableOpacity>
 
 						<TouchableOpacity style={styles.socialButton}>
-							<Image source={require("../assets/images/favicon.png")} style={styles.socialIcon} />
+							<FontAwesome size={28} name="facebook" />
 						</TouchableOpacity>
 
 						<TouchableOpacity style={styles.socialButton}>
-							<Image source={require("../assets/images/favicon.png")} style={styles.socialIcon} />
+							<FontAwesome5 size={28} name="fingerprint" />
 						</TouchableOpacity>
 					</View>
 
