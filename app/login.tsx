@@ -40,9 +40,11 @@ export default function LoginScreen() {
 						<Text style={styles.forgotPasswordText}>Forgot Password</Text>
 					</TouchableOpacity>
 
-					<TouchableOpacity style={styles.loginButton}>
-						<Text style={styles.loginButtonText}>Log In</Text>
-					</TouchableOpacity>
+					<Link href="/(tabs)/home" asChild>
+						<TouchableOpacity style={styles.loginButton}>
+							<Text style={styles.loginButtonText}>Log In</Text>
+						</TouchableOpacity>
+					</Link>
 
 					<Text style={styles.orSignUpText}>or sign up with</Text>
 
