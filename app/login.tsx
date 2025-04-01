@@ -1,42 +1,73 @@
-import * as React from "react";
-import { SafeAreaView, StyleSheet, TouchableOpacity, View } from "react-native";
-import Animated, { FadeInUp, FadeOutDown, LayoutAnimationConfig } from "react-native-reanimated";
-import { Info } from "~/lib/icons/Info";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
-import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
-import { Progress } from "~/components/ui/progress";
-import { Text } from "~/components/ui/text";
-import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
-import { Image } from "expo-image";
 import { Link } from "expo-router";
+import { useState } from "react";
+import { Image, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
-const GITHUB_AVATAR_URI = "https://i.pinimg.com/originals/ef/a2/8d/efa28d18a04e7fa40ed49eeb0ab660db.jpg";
+export default function LoginScreen() {
+	const [email, setEmail] = useState("");
+	const [password, setPassword] = useState("");
+	const [showPassword, setShowPassword] = useState(false);
 
-export default function Screen() {
+	const togglePasswordVisibility = () => {
+		setShowPassword(!showPassword);
+	};
+
 	return (
 		<SafeAreaView style={styles.container}>
-			<View style={styles.contentContainer}>
-				<View style={styles.logoContainer}>
-					<Image source={require("../assets/images/logo.png")} style={styles.logo} />
-					<Text style={styles.logoText}>CKD</Text>
-					<Text style={styles.appDescription}>App For Chronically Ill CKD Patients</Text>
-				</View>
+			<StatusBar barStyle="dark-content" />
 
-				<Text style={styles.welcomeText}>We are so excited to have you here. If you haven't already, create an account to get start.</Text>
+			<View style={styles.header}>
+				<TouchableOpacity style={styles.backButton}>{/* <Ionicons name="chevron-back" size={24} color="#2D7FF9" /> */}</TouchableOpacity>
+				<Text style={styles.headerTitle}>Log In</Text>
+			</View>
 
-				<View style={styles.buttonContainer}>
-					<Link href="/login" asChild>
-						<TouchableOpacity style={styles.primaryButton}>
-							<Text style={styles.primaryButtonText}>Log In</Text>
+			<View style={styles.loginContentContainer}>
+				<Text style={styles.loginWelcomeTitle}>Welcome</Text>
+				<Text style={styles.loginWelcomeText}>We are so excited to have you here. If you haven't already, create an account to get start.</Text>
+
+				<View style={styles.formContainer}>
+					<Text style={styles.inputLabel}>Email or Mobile Number</Text>
+					<TextInput style={styles.input} placeholder="example@example.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+
+					<Text style={styles.inputLabel}>Password</Text>
+					<View style={styles.passwordContainer}>
+						<TextInput style={styles.passwordInput} placeholder="••••••••••••" value={password} onChangeText={setPassword} secureTextEntry={!showPassword} />
+						<TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIcon}>
+							{/* <Ionicons name={showPassword ? "eye" : "eye-off"} size={24} color="#A0A0A0" /> */}
 						</TouchableOpacity>
-					</Link>
+					</View>
 
-					<Link href="/register" asChild>
-						<TouchableOpacity style={styles.secondaryButton}>
-							<Text style={styles.secondaryButtonText}>Sign Up</Text>
+					<TouchableOpacity style={styles.forgotPasswordButton}>
+						<Text style={styles.forgotPasswordText}>Forgot Password</Text>
+					</TouchableOpacity>
+
+					<TouchableOpacity style={styles.loginButton}>
+						<Text style={styles.loginButtonText}>Log In</Text>
+					</TouchableOpacity>
+
+					<Text style={styles.orSignUpText}>or sign up with</Text>
+
+					<View style={styles.socialButtonsContainer}>
+						<TouchableOpacity style={styles.socialButton}>
+							<Image source={require("../assets/images/favicon.png")} style={styles.socialIcon} />
 						</TouchableOpacity>
-					</Link>
+
+						<TouchableOpacity style={styles.socialButton}>
+							<Image source={require("../assets/images/favicon.png")} style={styles.socialIcon} />
+						</TouchableOpacity>
+
+						<TouchableOpacity style={styles.socialButton}>
+							<Image source={require("../assets/images/favicon.png")} style={styles.socialIcon} />
+						</TouchableOpacity>
+					</View>
+
+					<View style={styles.noAccountContainer}>
+						<Text style={styles.noAccountText}>Don't have an account? </Text>
+						<Link href="/register" asChild>
+							<TouchableOpacity>
+								<Text style={styles.signUpLink}>Sign Up</Text>
+							</TouchableOpacity>
+						</Link>
+					</View>
 				</View>
 			</View>
 		</SafeAreaView>
