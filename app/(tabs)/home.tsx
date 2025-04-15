@@ -1,9 +1,8 @@
-import { useSQLiteContext } from "expo-sqlite";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, SafeAreaView, StatusBar, TouchableOpacity, Modal, TextInput } from "react-native";
 
 export default function Tab() {
-	const db = useSQLiteContext();
+	// const db = useSQLiteContext();
 	const [waterIntake, setWaterIntake] = useState(0);
 	const [dailyGoal, setDailyGoal] = useState(2000);
 	const [currentTime, setCurrentTime] = useState(new Date());
@@ -14,19 +13,9 @@ export default function Tab() {
 
 	const setWaterGoal = async () => {
 		setDailyGoal(parseInt(waterAmount));
-		db.runAsync("INSERT INTO water_intake (amount) VALUES (?)", parseInt(waterAmount));
 		setWaterAmount("");
 		setGoalModalVisible(false);
 	};
-
-	useEffect(() => {
-		async function getGoal() {
-			const result = await db.getAllAsync<string>("SELECT * FROM water_intake");
-			setResult(result[0]);
-			console.log({ result });
-		}
-		getGoal();
-	}, []);
 
 	const setWaterConsumption = () => {
 		setWaterIntake((state) => state + parseInt(waterAmount));
