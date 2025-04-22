@@ -11,6 +11,7 @@ import { PortalHost } from "@rn-primitives/portal";
 import { ThemeToggle } from "~/components/ThemeToggle";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { SQLiteProvider } from "expo-sqlite";
+import migrateDbIfNeeded from "~/database/db";
 
 const LIGHT_THEME: Theme = {
 	...DefaultTheme,
@@ -50,7 +51,7 @@ export default function RootLayout() {
 	}
 
 	return (
-		<SQLiteProvider databaseName="cdk.db">
+		<SQLiteProvider databaseName="cdk.db" onInit={migrateDbIfNeeded}>
 			<ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
 				<StatusBar style={isDarkColorScheme ? "light" : "dark"} />
 				<Stack screenOptions={{ headerShown: false }}>

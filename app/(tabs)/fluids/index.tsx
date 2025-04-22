@@ -7,10 +7,12 @@ import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { captureRef } from "react-native-view-shot";
 import { Button } from "~/components/ui/button";
+import { useSQLiteContext } from "expo-sqlite";
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function IntakeScreen() {
+	const db = useSQLiteContext();
 	const chartRef = useRef(null);
 	const [data, setData] = useState<number[]>([]);
 
@@ -52,8 +54,13 @@ export default function IntakeScreen() {
 
 	const router = useRouter();
 
-	const onDayPress = (day: any) => {
+	const onDayPress = async (day: any) => {
 		setSelectedDate(new Date(day.dateString).toDateString());
+		const date = new Date(day.dateString).toISOString().split("T")[0];
+		const result = await db.getAllAsync<WaterIntake>("SELECT * FROM water_intake WHERE date(timestamp) = ?", date);
+		console.log({ result });
+		result.forEach((i) => console.log(new Date(i.timestamp).toLocaleTimeString()));
+
 		if (new Date(day.dateString) > new Date()) {
 			console.log("df");
 

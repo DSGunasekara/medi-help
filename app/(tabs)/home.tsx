@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import { useSQLiteContext } from "expo-sqlite";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, SafeAreaView, StatusBar, TouchableOpacity, Modal, TextInput } from "react-native";
 
 export default function Tab() {
-	// const db = useSQLiteContext();
+	const db = useSQLiteContext();
 	const [waterIntake, setWaterIntake] = useState(0);
 	const [dailyGoal, setDailyGoal] = useState(2000);
 	const [currentTime, setCurrentTime] = useState(new Date());
@@ -11,16 +12,47 @@ export default function Tab() {
 	const [waterAmount, setWaterAmount] = useState("");
 	const [result, setResult] = useState("");
 
+	useEffect(() => {
+		async function setup() {
+			const date = new Date().toISOString().split("T")[0];
+			const result = await db.getAllAsync<WaterIntake>("SELECT * FROM water_intake WHERE date(timestamp) = ?", date);
+
+			const totalIntake = result.reduce((acc, curr) => (acc += curr.amount), 0);
+			setWaterIntake(totalIntake);
+			const goal = await db.getAllAsync<WaterGoal>("SELECT * FROM water_goal");
+
+			if (goal.length > 0) {
+				setDailyGoal(goal[0].amount);
+			}
+		}
+		setup();
+	}, []);
+
 	const setWaterGoal = async () => {
-		setDailyGoal(parseInt(waterAmount));
-		setWaterAmount("");
-		setGoalModalVisible(false);
+		try {
+			setDailyGoal(parseInt(waterAmount));
+			const goal = await db.getAllAsync<WaterGoal>("SELECT * FROM water_goal");
+			if (goal.length > 0) {
+				await db.runAsync("UPDATE water_goal SET amount = ? WHERE id = ?", parseInt(waterAmount), 1);
+			} else {
+				await db.runAsync("INSERT INTO water_goal (amount) VALUES (?)", parseInt(waterAmount));
+			}
+			setWaterAmount("");
+			setGoalModalVisible(false);
+		} catch (error) {
+			console.log(error);
+		}
 	};
 
-	const setWaterConsumption = () => {
-		setWaterIntake((state) => state + parseInt(waterAmount));
-		setWaterAmount("");
-		setIntakeModalVisible(false);
+	const setWaterConsumption = async () => {
+		try {
+			setWaterIntake((state) => state + parseInt(waterAmount));
+			await db.runAsync("INSERT INTO water_intake (amount, timestamp) VALUES (?, ?)", parseInt(waterAmount), new Date().toISOString());
+			setWaterAmount("");
+			setIntakeModalVisible(false);
+		} catch (error) {
+			console.log(error);
+		}
 	};
 
 	// Calculate percentage of daily goal
