@@ -1,309 +1,204 @@
-import { useSQLiteContext } from "expo-sqlite";
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, SafeAreaView, StatusBar, TouchableOpacity, Modal, TextInput } from "react-native";
+const GITHUB_AVATAR_URI = "https://i.pinimg.com/originals/ef/a2/8d/efa28d18a04e7fa40ed49eeb0ab660db.jpg";
 
-export default function Tab() {
-	const db = useSQLiteContext();
-	const [waterIntake, setWaterIntake] = useState(0);
-	const [dailyGoal, setDailyGoal] = useState(2000);
-	const [currentTime, setCurrentTime] = useState(new Date());
-	const [goalModalVisible, setGoalModalVisible] = useState(false);
-	const [intakeModalVisible, setIntakeModalVisible] = useState(false);
-	const [waterAmount, setWaterAmount] = useState("");
-	const [result, setResult] = useState("");
+// export default function Tab() {
+// 	return (
+// 		<View style={styles.container}>
+// 			<Avatar alt="Zach Nugent's Avatar">
+// 				<AvatarImage source={{ uri: GITHUB_AVATAR_URI }} />
+// 				<AvatarFallback>
+// 					<Text>ZN</Text>
+// 				</AvatarFallback>
+// 			</Avatar>
+// 		</View>
+// 	);
+// }
 
-	useEffect(() => {
-		async function setup() {
-			const date = new Date().toISOString().split("T")[0];
-			const result = await db.getAllAsync<WaterIntake>("SELECT * FROM water_intake WHERE date(timestamp) = ?", date);
+// const styles = StyleSheet.create({
+// 	container: {
+// 		flex: 1,
+// 		justifyContent: "center",
+// 		alignItems: "center",
+// 		backgroundColor: "white",
+// 	},
+// });
+import React from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
+import { SvgXml } from 'react-native-svg';
+import { Home, Smile, Droplet, Activity, Thermometer, Settings, Search, Calendar, MoreHorizontal } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Link, useRouter } from "expo-router";
 
-			const totalIntake = result.reduce((acc, curr) => (acc += curr.amount), 0);
-			setWaterIntake(totalIntake);
-			const goal = await db.getAllAsync<WaterGoal>("SELECT * FROM water_goal");
+const HomePage: React.FC = () => {
+  const userName = 'John Doe';
+  const profilePicUrl = GITHUB_AVATAR_URI;
 
-			if (goal.length > 0) {
-				setDailyGoal(goal[0].amount);
-			}
-		}
-		setup();
-	}, []);
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Link href="/(tabs)/profile" asChild>
+          <TouchableOpacity>
+            <Image source={{ uri: profilePicUrl }} style={styles.profilePic} />
+          </TouchableOpacity>
+        </Link>
 
-	const setWaterGoal = async () => {
-		try {
-			setDailyGoal(parseInt(waterAmount));
-			const goal = await db.getAllAsync<WaterGoal>("SELECT * FROM water_goal");
-			if (goal.length > 0) {
-				await db.runAsync("UPDATE water_goal SET amount = ? WHERE id = ?", parseInt(waterAmount), 1);
-			} else {
-				await db.runAsync("INSERT INTO water_goal (amount) VALUES (?)", parseInt(waterAmount));
-			}
-			setWaterAmount("");
-			setGoalModalVisible(false);
-		} catch (error) {
-			console.log(error);
-		}
-	};
+        <Text style={styles.userName}>Hello, {userName}</Text>
+        <View style={styles.headerIcons}>
+          <TouchableOpacity style={styles.iconButton}>
+            <Search size={22} color="#4f46e5" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Settings size={22} color="#4f46e5" />
+          </TouchableOpacity>
+        </View>
+      </View>
 
-	const setWaterConsumption = async () => {
-		try {
-			setWaterIntake((state) => state + parseInt(waterAmount));
-			await db.runAsync("INSERT INTO water_intake (amount, timestamp) VALUES (?, ?)", parseInt(waterAmount), new Date().toISOString());
-			setWaterAmount("");
-			setIntakeModalVisible(false);
-		} catch (error) {
-			console.log(error);
-		}
-	};
+      <TextInput
+        style={styles.searchBar}
+        placeholder="Search..."
+        placeholderTextColor="#999"
+      />
 
-	// Calculate percentage of daily goal
-	const percentage = Math.min(Math.round((waterIntake / dailyGoal) * 100), 100);
-	const formattedTime = currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-	return (
-		<SafeAreaView style={styles.container}>
-			<View style={styles.header}>
-				{/* <Ionicons name="chevron-back" size={24} color="#2196F3" /> */}
-				<Text style={styles.headerTitle}>Fluid Tracker</Text>
-				<View style={styles.iconContainer}>
-					<TouchableOpacity>{/* <Ionicons name="notifications-outline" size={24} color="#2196F3" style={styles.headerIcon} /> */}</TouchableOpacity>
-					<TouchableOpacity>{/* <Ionicons name="settings-outline" size={24} color="#2196F3" /> */}</TouchableOpacity>
-				</View>
-			</View>
+      <View style={styles.motivationPanel}>
+        <Smile size={28} color="#4f46e5" />
+        <Text style={styles.motivationText}>"Stay strong, your health journey is worth it!"</Text>
+      </View>
 
-			<View style={styles.currentIntakeContainer}>
-				<Text style={styles.timeLabel}>{formattedTime}</Text>
-				<Text style={styles.intakeLabel}>
-					{waterIntake}ml water ({Math.round(waterIntake / 200)} glasses)
-				</Text>
-			</View>
+      <View style={styles.tilesContainer}>
+      {/* <Link > */}
+        <TouchableOpacity style={styles.tile}>
+          <Smile size={32} color="white" />
+          <Text style={styles.tileText}>Mood Tracking</Text>
+        </TouchableOpacity>
+        {/* </Link> */}
 
-			{/* <Link href="/(tabs)/input" asChild> */}
-			<TouchableOpacity style={styles.goalButton} onPress={() => setGoalModalVisible(true)}>
-				<Text style={styles.goalButtonText}>Add Your Goal</Text>
-			</TouchableOpacity>
-			{/* </Link> */}
+        <Link href="/(tabs)/fluid" asChild>
+          <TouchableOpacity style={styles.tile}>
+            <Droplet size={32} color="white" />
+            <Text style={styles.tileText}>Fluid Tracking</Text>
+          </TouchableOpacity>
+        </Link>
 
-			<Modal animationType="slide" transparent={true} visible={goalModalVisible} onRequestClose={() => setGoalModalVisible(false)}>
-				<View style={styles.modalContainer}>
-					<View style={styles.modalContent}>
-						<View style={styles.modalHeader}>
-							<Text style={styles.modalTitle}>What is the water goad for today?</Text>
-							<TouchableOpacity onPress={() => setGoalModalVisible(false)}>{/* <Ionicons name="close" size={24} color="#000" /> */}</TouchableOpacity>
-						</View>
+        {/* <Link href="/(tabs)/fluids/index" asChild> */}
+        <TouchableOpacity style={styles.tile}>
+          <Activity size={32} color="white" />
+          <Text style={styles.tileText}>Weight Report</Text>
+        </TouchableOpacity>
+      {/* </Link> */}
+        <TouchableOpacity style={styles.tile}>
+          <Thermometer size={32} color="white" />
+          <Text style={styles.tileText}>Symptoms</Text>
+        </TouchableOpacity>
+      </View>
 
-						<Text style={styles.inputLabel}>water in ml</Text>
-						<TextInput style={styles.input} placeholder="Enter your water goal here" value={waterAmount} onChangeText={setWaterAmount} keyboardType="numeric" />
-
-						<TouchableOpacity style={styles.saveButton} onPress={setWaterGoal}>
-							<Text style={styles.saveButtonText}>Save</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
-			</Modal>
-
-			<View style={styles.gaugeContainer}>
-				<View style={styles.gaugeBackground}>
-					<View style={[styles.gaugeFill, { height: `${percentage}%` }]} />
-					<View style={styles.gaugeContent}>
-						<Text style={styles.gaugeAmount}>{waterIntake}ml</Text>
-						<Text style={styles.gaugeLabel}>/{dailyGoal}ml</Text>
-						<Text style={styles.gaugePercent}>{percentage}%</Text>
-					</View>
-					<View style={styles.gaugeControl}>
-						<TouchableOpacity style={styles.addButton}>{/* <Ionicons name="add" size={24} color="white" /> */}</TouchableOpacity>
-					</View>
-				</View>
-			</View>
-
-			<TouchableOpacity style={styles.addIntakeButton} onPress={() => setIntakeModalVisible(true)}>
-				<Text style={styles.addIntakeButtonText}>Add</Text>
-			</TouchableOpacity>
-
-			<Modal animationType="slide" transparent={true} visible={intakeModalVisible} onRequestClose={() => setIntakeModalVisible(false)}>
-				<View style={styles.modalContainer}>
-					<View style={styles.modalContent}>
-						<View style={styles.modalHeader}>
-							<Text style={styles.modalTitle}>What is the water goad for today?</Text>
-							<TouchableOpacity onPress={() => setIntakeModalVisible(false)}>{/* <Ionicons name="close" size={24} color="#000" /> */}</TouchableOpacity>
-						</View>
-
-						<Text style={styles.inputLabel}>water in ml</Text>
-						<TextInput style={styles.input} placeholder="Enter your water intake here" value={waterAmount} onChangeText={setWaterAmount} keyboardType="numeric" />
-
-						<TouchableOpacity style={styles.saveButton} onPress={setWaterConsumption}>
-							<Text style={styles.saveButtonText}>Save</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
-			</Modal>
-
-			<StatusBar />
-		</SafeAreaView>
-	);
-}
+      {/* <View style={styles.bottomNavFull}>
+        <TouchableOpacity>
+          <Home size={24} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <Search size={24} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <MoreHorizontal size={24} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <Calendar size={24} color="#fff" />
+        </TouchableOpacity>
+      </View> */}
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: "#fff",
-	},
-	header: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-		paddingHorizontal: 16,
-		paddingVertical: 12,
-	},
-	headerTitle: {
-		fontSize: 18,
-		fontWeight: "600",
-		color: "#2196F3",
-	},
-	iconContainer: {
-		flexDirection: "row",
-		alignItems: "center",
-	},
-	headerIcon: {
-		marginRight: 16,
-	},
-	currentIntakeContainer: {
-		padding: 16,
-		alignItems: "center",
-	},
-	timeLabel: {
-		fontSize: 22,
-		fontWeight: "bold",
-	},
-	intakeLabel: {
-		fontSize: 16,
-		color: "#666",
-		marginTop: 4,
-	},
-	goalButton: {
-		backgroundColor: "#e3f2fd",
-		borderRadius: 24,
-		paddingVertical: 12,
-		paddingHorizontal: 24,
-		marginHorizontal: 16,
-		alignItems: "center",
-	},
-	goalButtonText: {
-		color: "#2196F3",
-		fontSize: 16,
-		fontWeight: "600",
-	},
-	gaugeContainer: {
-		flex: 1,
-		alignItems: "center",
-		justifyContent: "center",
-		paddingVertical: 30,
-	},
-	gaugeBackground: {
-		width: 200,
-		height: 200,
-		borderRadius: 100,
-		borderWidth: 10,
-		borderColor: "#e3f2fd",
-		overflow: "hidden",
-		justifyContent: "flex-end",
-		alignItems: "center",
-	},
-	gaugeFill: {
-		position: "absolute",
-		bottom: 0,
-		left: 0,
-		right: 0,
-		backgroundColor: "#2196F3",
-	},
-	gaugeContent: {
-		position: "absolute",
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	gaugeAmount: {
-		fontSize: 16,
-		fontWeight: "bold",
-		color: "#666",
-	},
-	gaugeLabel: {
-		fontSize: 18,
-		color: "#666",
-	},
-	gaugePercent: {
-		fontSize: 20,
-		fontWeight: "600",
-		color: "#666",
-		marginTop: 8,
-	},
-	gaugeControl: {
-		position: "absolute",
-		alignItems: "center",
-	},
-	addButton: {
-		backgroundColor: "#2196F3",
-		width: 40,
-		height: 40,
-		borderRadius: 20,
-		alignItems: "center",
-		justifyContent: "center",
-		position: "absolute",
-		right: -20,
-	},
-	addIntakeButton: {
-		backgroundColor: "#2196F3",
-		borderRadius: 24,
-		paddingVertical: 14,
-		marginHorizontal: 16,
-		marginBottom: 20,
-		alignItems: "center",
-	},
-	addIntakeButtonText: {
-		color: "#fff",
-		fontSize: 16,
-		fontWeight: "600",
-	},
-	modalContainer: {
-		flex: 1,
-		justifyContent: "center",
-		alignItems: "center",
-		backgroundColor: "rgba(0,0,0,0.5)",
-	},
-	modalContent: {
-		width: "80%",
-		backgroundColor: "white",
-		borderRadius: 10,
-		padding: 20,
-	},
-	modalHeader: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-		marginBottom: 20,
-	},
-	modalTitle: {
-		fontSize: 18,
-		fontWeight: "600",
-	},
-	inputLabel: {
-		fontSize: 14,
-		color: "#666",
-		marginBottom: 8,
-	},
-	input: {
-		borderWidth: 1,
-		borderColor: "#ddd",
-		borderRadius: 8,
-		padding: 12,
-		marginBottom: 20,
-	},
-	saveButton: {
-		backgroundColor: "#2196F3",
-		borderRadius: 8,
-		paddingVertical: 12,
-		alignItems: "center",
-	},
-	saveButtonText: {
-		color: "#fff",
-		fontSize: 16,
-		fontWeight: "600",
-	},
+  container: {
+    flex: 1,
+    backgroundColor: '#f0f4f8',
+    padding: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  profilePic: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
+  },
+  userName: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  headerIcons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  iconButton: {
+    padding: 6,
+  },
+  searchBar: {
+    height: 40,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    fontSize: 14,
+    marginBottom: 16,
+    borderColor: '#ddd',
+    borderWidth: 1,
+  },
+  motivationPanel: {
+    backgroundColor: '#e0e7ff',
+    borderRadius: 10,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  motivationText: {
+    marginLeft: 12,
+    fontSize: 14,
+    color: '#1e40af',
+    fontWeight: '500',
+  },
+  tilesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  tile: {
+    backgroundColor: '#4f46e5',
+    width: '48%',
+    padding: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  tileText: {
+    color: 'white',
+    marginTop: 8,
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  bottomNavFull: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: '#4f46e5',
+    borderRadius: 30,
+    height: 60,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
 });
+
+export default HomePage;
