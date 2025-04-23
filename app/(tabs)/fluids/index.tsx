@@ -24,20 +24,35 @@ export default function IntakeScreen() {
   const [data, setData] = useState<number[]>([0, 0, 0, 0, 0, 0]);
   const [selectedDate, setSelectedDate] = useState(new Date().toDateString());
   const [hasData, setHasData] = useState(true);
+  const [rawEntries, setRawEntries] = useState<WaterIntake[]>([]);
 
   const generatePDF = async () => {
     try {
-      const chartUri = await captureRef(chartRef, {
-        format: "png",
-        quality: 1,
-      });
+      const allData = await db.getAllAsync<WaterIntake>("SELECT * FROM water_intake ORDER BY timestamp DESC");
+      const rows = allData.map((entry, i) => {
+        const dateTime = new Date(entry.timestamp);
+        const date = dateTime.toLocaleDateString();
+        const time = dateTime.toLocaleTimeString();
+        return `<tr style="background:${i % 2 === 0 ? '#f9f9f9' : '#ffffff'}"><td>${date}</td><td>${time}</td><td style='text-align:right;'>${entry.amount} ml</td></tr>`;
+      }).join("");
 
       const html = `
       <html>
-        <body style="font-family: sans-serif;">
+        <head>
+          <style>
+            h1 { text-align: center; color: #2196F3; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+            th { background-color: #2196F3; color: white; text-align: left; padding: 8px; }
+            td { padding: 8px; border-bottom: 1px solid #ccc; }
+            tr:hover { background-color: #f1f1f1; }
+          </style>
+        </head>
+        <body>
           <h1>Fluid Intake Report</h1>
-          <p>Date: ${selectedDate}</p>
-          <img src="${chartUri}" width="100%" />
+          <table>
+            <thead><tr><th>Date</th><th>Time</th><th style='text-align:right;'>Amount</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
         </body>
       </html>`;
 
@@ -59,6 +74,8 @@ export default function IntakeScreen() {
       "SELECT * FROM water_intake WHERE date(timestamp) = ?",
       dateStr
     );
+
+    setRawEntries(result);
 
     const slotSums = [0, 0, 0, 0, 0, 0];
     const slots = [8, 10, 12, 14, 16, 18];
