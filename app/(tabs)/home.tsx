@@ -60,10 +60,16 @@ const HomePage: React.FC = () => {
 
       {/* Feature Tiles */}
       <View style={styles.tilesContainer}>
-        <TouchableOpacity style={styles.tile}>
+        <Link href="/(tabs)/moods" asChild>
+          <TouchableOpacity style={styles.tile}>
+            <Smile size={32} color="white" />
+            <Text style={styles.tileText}>Mood Tracking</Text>
+          </TouchableOpacity>
+        </Link>
+        {/* <TouchableOpacity style={styles.tile}>
           <Smile size={32} color="white" />
           <Text style={styles.tileText}>Mood Tracking</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <Link href="/(tabs)/fluid" asChild>
           <TouchableOpacity style={styles.tile}>
