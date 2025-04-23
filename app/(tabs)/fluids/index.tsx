@@ -1,3 +1,4 @@
+// IntakeScreen.tsx
 import { Calendar } from "react-native-calendars";
 import { useRouter } from "expo-router";
 import { LineChart } from "react-native-chart-kit";
@@ -11,137 +12,152 @@ import { useSQLiteContext } from "expo-sqlite";
 
 const screenWidth = Dimensions.get("window").width;
 
+type WaterIntake = {
+  id: number;
+  amount: number;
+  timestamp: string;
+};
+
 export default function IntakeScreen() {
-	const db = useSQLiteContext();
-	const chartRef = useRef(null);
-	const [data, setData] = useState<number[]>([]);
+  const db = useSQLiteContext();
+  const chartRef = useRef(null);
+  const [data, setData] = useState<number[]>([0, 0, 0, 0, 0, 0]);
+  const [selectedDate, setSelectedDate] = useState(new Date().toDateString());
+  const [hasData, setHasData] = useState(true);
 
-	const [selectedDate, setSelectedDate] = useState(new Date().toDateString());
+  const generatePDF = async () => {
+    try {
+      const chartUri = await captureRef(chartRef, {
+        format: "png",
+        quality: 1,
+      });
 
-	function generateData() {
-		return [Math.random() * 100, Math.random() * 100, Math.random() * 100, Math.random() * 100, Math.random() * 100, Math.random() * 100];
-	}
+      const html = `
+      <html>
+        <body style="font-family: sans-serif;">
+          <h1>Fluid Intake Report</h1>
+          <p>Date: ${selectedDate}</p>
+          <img src="${chartUri}" width="100%" />
+        </body>
+      </html>`;
 
-	useEffect(() => {
-		const data = generateData();
-		setData(data);
-	}, []);
+      const { uri } = await Print.printToFileAsync({ html });
+      await Sharing.shareAsync(uri);
+    } catch (error) {
+      console.error("PDF generation failed:", error);
+    }
+  };
 
-	const generatePDF = async () => {
-		try {
-			const chartUri = await captureRef(chartRef, {
-				format: "png",
-				quality: 1,
-			});
+  const router = useRouter();
 
-			const html = `
-			<html>
-			  <body style="font-family: sans-serif;">
-				<h1>Fluid Intake Report</h1>
-				<p>Date: 2025-04-15</p>
-				<img src="${chartUri}" width="100%" />
-			  </body>
-			</html>
-		  `;
+  const onDayPress = async (day: any) => {
+    const date = new Date(day.dateString);
+    setSelectedDate(date.toDateString());
 
-			const { uri } = await Print.printToFileAsync({ html });
+    const dateStr = date.toISOString().split("T")[0];
+    const result = await db.getAllAsync<WaterIntake>(
+      "SELECT * FROM water_intake WHERE date(timestamp) = ?",
+      dateStr
+    );
 
-			await Sharing.shareAsync(uri);
-		} catch (error) {
-			console.error("PDF generation failed:", error);
-		}
-	};
+    const slotSums = [0, 0, 0, 0, 0, 0];
+    const slots = [8, 10, 12, 14, 16, 18];
 
-	const router = useRouter();
+    if (result.length === 0) {
+      setHasData(false);
+      setData([0, 0, 0, 0, 0, 0]);
+      return;
+    }
 
-	const onDayPress = async (day: any) => {
-		setSelectedDate(new Date(day.dateString).toDateString());
-		const date = new Date(day.dateString).toISOString().split("T")[0];
-		const result = await db.getAllAsync<WaterIntake>("SELECT * FROM water_intake WHERE date(timestamp) = ?", date);
-		console.log({ result });
-		result.forEach((i) => console.log(new Date(i.timestamp).toLocaleTimeString()));
+    setHasData(true);
 
-		if (new Date(day.dateString) > new Date()) {
-			console.log("df");
+    result.forEach((entry) => {
+      const hour = new Date(entry.timestamp).getHours();
+      const index = slots.findIndex((slot) => hour >= slot && hour < slot + 2);
+      if (index !== -1) {
+        const numericAmount = parseFloat(entry.amount as any);
+        if (!isNaN(numericAmount)) {
+          slotSums[index] += numericAmount;
+        }
+      }
+    });
 
-			setData([0, 0, 0, 0, 0, 0]);
-			return;
-		}
+    setData([...slotSums]);
+  };
 
-		const data = generateData();
-		setData(data);
-		// router.push(`/intake/${day.dateString}`); // Go to chart screen
-	};
+  return (
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.headerTitle}>Fluid Tracker</Text>
+      <View style={styles.iconContainer}></View>
 
-	return (
-		<SafeAreaView style={styles.container}>
-			<Text style={styles.headerTitle}>Fluid Tracker</Text>
-			<View style={styles.iconContainer}>
-				<TouchableOpacity>{/* <Ionicons name="notifications-outline" size={24} color="#2196F3" style={styles.headerIcon} /> */}</TouchableOpacity>
-				<TouchableOpacity>{/* <Ionicons name="settings-outline" size={24} color="#2196F3" /> */}</TouchableOpacity>
-			</View>
-			<Calendar
-				onDayPress={onDayPress}
-				markedDates={{
-					"2025-04-14": { marked: true, dotColor: "blue" },
-					"2025-04-15": { marked: true, dotColor: "green" },
-				}}
-			/>
+      <Calendar
+        onDayPress={onDayPress}
+        markedDates={{
+          "2025-04-14": { marked: true, dotColor: "blue" },
+          "2025-04-15": { marked: true, dotColor: "green" },
+        }}
+      />
 
-			<View style={{ flex: 1, padding: 16 }}>
-				<Text style={{ fontSize: 20, marginBottom: 10 }}>Fluid intake on {selectedDate}</Text>
-				<View ref={chartRef} style={{ height: 200, flexDirection: "row" }} collapsable={false}>
-					<LineChart
-						data={{
-							labels: ["8AM", "10AM", "12PM", "2PM", "4PM", "6PM"],
-							datasets: [
-								{
-									data: [...data],
-								},
-							],
-						}}
-						width={300} // Set the width of the chart
-						height={200} // Set the height of the chart
-						chartConfig={{
-							backgroundColor: "#e26a00",
-							backgroundGradientFrom: "#fb8c00",
-							backgroundGradientTo: "#ffa726",
-							decimalPlaces: 2, // optional, defaults to 2dp
-							color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-							labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-							style: {
-								borderRadius: 16,
-							},
-							propsForDots: {
-								r: "6",
-								strokeWidth: "2",
-								stroke: "#ffa726",
-							},
-						}}
-					/>
-				</View>
-				<View style={{ marginTop: 24 }}>
-					<Button onPress={generatePDF}>
-						<Text>Download Report</Text>
-					</Button>
-				</View>
-			</View>
-		</SafeAreaView>
-	);
+      <View style={{ flex: 1, padding: 16 }}>
+        <Text style={{ fontSize: 20, marginBottom: 10 }}>Fluid intake on {selectedDate}</Text>
+
+        {!hasData ? (
+          <Text style={{ fontSize: 16, color: "gray", textAlign: "center" }}>No data found for this day.</Text>
+        ) : (
+          <View ref={chartRef} style={{ height: 200, flexDirection: "row" }} collapsable={false}>
+            <LineChart
+              data={{
+                labels: ["8AM", "10AM", "12PM", "2PM", "4PM", "6PM"],
+                datasets: [
+                  {
+                    data: data.map((value) => Number.isFinite(value) ? value : 0),
+                  },
+                ],
+              }}
+              width={screenWidth - 32}
+              height={200}
+              chartConfig={{
+                backgroundColor: "#e26a00",
+                backgroundGradientFrom: "#fb8c00",
+                backgroundGradientTo: "#ffa726",
+                decimalPlaces: 0,
+                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                style: {
+                  borderRadius: 16,
+                },
+                propsForDots: {
+                  r: "6",
+                  strokeWidth: "2",
+                  stroke: "#ffa726",
+                },
+              }}
+            />
+          </View>
+        )}
+
+        <View style={{ marginTop: 24 }}>
+          <Button onPress={generatePDF}>
+            <Text>Download Report</Text>
+          </Button>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: "#fff",
-	},
-	headerTitle: {
-		fontSize: 18,
-		fontWeight: "600",
-		color: "#2196F3",
-	},
-	iconContainer: {
-		flexDirection: "row",
-		alignItems: "center",
-	},
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#2196F3",
+  },
+  iconContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
 });
