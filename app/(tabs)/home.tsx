@@ -1,32 +1,21 @@
-const GITHUB_AVATAR_URI = "https://i.pinimg.com/originals/ef/a2/8d/efa28d18a04e7fa40ed49eeb0ab660db.jpg";
-
-// export default function Tab() {
-// 	return (
-// 		<View style={styles.container}>
-// 			<Avatar alt="Zach Nugent's Avatar">
-// 				<AvatarImage source={{ uri: GITHUB_AVATAR_URI }} />
-// 				<AvatarFallback>
-// 					<Text>ZN</Text>
-// 				</AvatarFallback>
-// 			</Avatar>
-// 		</View>
-// 	);
-// }
-
-// const styles = StyleSheet.create({
-// 	container: {
-// 		flex: 1,
-// 		justifyContent: "center",
-// 		alignItems: "center",
-// 		backgroundColor: "white",
-// 	},
-// });
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
-import { SvgXml } from 'react-native-svg';
-import { Home, Smile, Droplet, Activity, Thermometer, Settings, Search, Calendar, MoreHorizontal } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link, useRouter } from "expo-router";
+import { Link } from 'expo-router';
+import {
+  Home,
+  Smile,
+  Droplet,
+  Activity,
+  Thermometer,
+  Settings,
+  Search,
+  Calendar,
+  Phone,
+  Pill,
+} from 'lucide-react-native';
+
+const GITHUB_AVATAR_URI = "https://i.pinimg.com/originals/ef/a2/8d/efa28d18a04e7fa40ed49eeb0ab660db.jpg";
 
 const HomePage: React.FC = () => {
   const userName = 'John Doe';
@@ -34,6 +23,7 @@ const HomePage: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <Link href="/(tabs)/profile" asChild>
           <TouchableOpacity>
@@ -42,34 +32,38 @@ const HomePage: React.FC = () => {
         </Link>
 
         <Text style={styles.userName}>Hello, {userName}</Text>
+
         <View style={styles.headerIcons}>
           <TouchableOpacity style={styles.iconButton}>
-            <Search size={22} color="#4f46e5" />
+            <Search size={22} color="#2196F3" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton}>
-            <Settings size={22} color="#4f46e5" />
+            <Settings size={22} color="#2196F3" />
           </TouchableOpacity>
         </View>
       </View>
 
+      {/* Search */}
       <TextInput
         style={styles.searchBar}
         placeholder="Search..."
         placeholderTextColor="#999"
       />
 
+      {/* Motivation Panel */}
       <View style={styles.motivationPanel}>
-        <Smile size={28} color="#4f46e5" />
-        <Text style={styles.motivationText}>"Stay strong, your health journey is worth it!"</Text>
+        <Smile size={28} color="#2196F3" />
+        <Text style={styles.motivationText}>
+          "Stay strong, your health journey is worth it!"
+        </Text>
       </View>
 
+      {/* Feature Tiles */}
       <View style={styles.tilesContainer}>
-      {/* <Link > */}
         <TouchableOpacity style={styles.tile}>
           <Smile size={32} color="white" />
           <Text style={styles.tileText}>Mood Tracking</Text>
         </TouchableOpacity>
-        {/* </Link> */}
 
         <Link href="/(tabs)/fluid" asChild>
           <TouchableOpacity style={styles.tile}>
@@ -78,32 +72,32 @@ const HomePage: React.FC = () => {
           </TouchableOpacity>
         </Link>
 
-        {/* <Link href="/(tabs)/fluids/index" asChild> */}
+ 		<Link href="/(tabs)/weights" asChild>
         <TouchableOpacity style={styles.tile}>
           <Activity size={32} color="white" />
           <Text style={styles.tileText}>Weight Report</Text>
         </TouchableOpacity>
-      {/* </Link> */}
+		</Link>
+
         <TouchableOpacity style={styles.tile}>
           <Thermometer size={32} color="white" />
           <Text style={styles.tileText}>Symptoms</Text>
         </TouchableOpacity>
-      </View>
 
-      {/* <View style={styles.bottomNavFull}>
-        <TouchableOpacity>
-          <Home size={24} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Search size={24} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <MoreHorizontal size={24} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Calendar size={24} color="#fff" />
-        </TouchableOpacity>
-      </View> */}
+        <Link href="/(tabs)/contacts" asChild>
+          <TouchableOpacity style={styles.tile}>
+            <Phone size={32} color="white" />
+            <Text style={styles.tileText}>Contacts</Text>
+          </TouchableOpacity>
+        </Link>
+
+        {/* <Link href="/(tabs)/medications" asChild> */}
+          <TouchableOpacity style={styles.tile}>
+            <Pill size={32} color="white" />
+            <Text style={styles.tileText}>Medication</Text>
+          </TouchableOpacity>
+        {/* </Link> */}
+      </View>
     </SafeAreaView>
   );
 };
@@ -149,7 +143,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   motivationPanel: {
-    backgroundColor: '#e0e7ff',
+    backgroundColor: '#e0f2ff',
     borderRadius: 10,
     padding: 16,
     flexDirection: 'row',
@@ -169,7 +163,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   tile: {
-    backgroundColor: '#4f46e5',
+    backgroundColor: '#2196F3', // Updated to match Fluid Tracker
     width: '48%',
     padding: 20,
     borderRadius: 12,
@@ -181,23 +175,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 14,
     textAlign: 'center',
-  },
-  bottomNavFull: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
-    backgroundColor: '#4f46e5',
-    borderRadius: 30,
-    height: 60,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
 });
 
