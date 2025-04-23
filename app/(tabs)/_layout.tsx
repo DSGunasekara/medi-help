@@ -19,9 +19,9 @@ export default function TabLayout() {
 				}}
 			/>
 			<Tabs.Screen
-				name="profile"
+				name="contacts"
 				options={{
-					title: "Profile",
+					title: "Contacts",
 					tabBarIcon: ({ color }) => <FontAwesome size={28} name="user-circle" color={color} />,
 				}}
 			/>
