@@ -1,261 +1,356 @@
 // ContactsScreen.tsx
 import {
-    View,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    FlatList,
-    StyleSheet,
-    SafeAreaView,
-    Modal,
-    Alert,
-    Linking,
-  } from "react-native";
-  import { useEffect, useState } from "react";
-  import { useSQLiteContext } from "expo-sqlite";
-  import { Ionicons } from "@expo/vector-icons";
-  
-  export default function ContactsScreen() {
-    const db = useSQLiteContext();
-    const [name, setName] = useState("");
-    const [phone, setPhone] = useState("");
-    const [contacts, setContacts] = useState<any[]>([]);
-    const [editingId, setEditingId] = useState<number | null>(null);
-    const [modalVisible, setModalVisible] = useState(false);
-  
-    useEffect(() => {
-      (async () => {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+  SafeAreaView,
+  Modal,
+  Alert,
+  Linking,
+} from "react-native";
+import { useEffect, useState } from "react";
+import { useSQLiteContext } from "expo-sqlite";
+import { Ionicons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
+
+export default function ContactsScreen() {
+  const db = useSQLiteContext();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [type, setType] = useState("");
+  const [selectedIcon, setSelectedIcon] = useState<string>("restaurant");
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [viewingContact, setViewingContact] = useState<any | null>(null);
+  const [viewModalVisible, setViewModalVisible] = useState(false);
+
+  const hospitalityIcons = [
+    "restaurant",
+    "bed",
+    "briefcase",
+    "cafe",
+    "concierge-bell",
+    "wine",
+    "broom",
+    "car",
+    "bus",
+    "person",
+  ];
+
+  useEffect(() => {
+    (async () => {
+      await db.runAsync(
+        `CREATE TABLE IF NOT EXISTS contacts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT,
+          email TEXT,
+          phone TEXT,
+          type TEXT,
+          icon TEXT
+        )`
+      );
+      fetchContacts();
+    })();
+  }, []);
+
+  const fetchContacts = async () => {
+    const result = await db.getAllAsync("SELECT * FROM contacts");
+    setContacts(result);
+  };
+
+  const saveContact = async () => {
+    if (!name || !email || !phone || !type) return;
+    try {
+      if (editingId !== null) {
         await db.runAsync(
-          "CREATE TABLE IF NOT EXISTS contacts (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, phone TEXT)"
+          "UPDATE contacts SET name = ?, email = ?, phone = ?, type = ?, icon = ? WHERE id = ?",
+          name,
+          email,
+          phone,
+          type,
+          selectedIcon,
+          editingId
         );
-        fetchContacts();
-      })();
-    }, []);
-  
-    const fetchContacts = async () => {
-      const result = await db.getAllAsync("SELECT * FROM contacts");
-      setContacts(result);
-    };
-  
-    const saveContact = async () => {
-      if (!name || !phone) return;
-      try {
-        if (editingId !== null) {
-          await db.runAsync(
-            "UPDATE contacts SET name = ?, phone = ? WHERE id = ?",
-            name,
-            phone,
-            editingId
-          );
-        } else {
-          await db.runAsync(
-            "INSERT INTO contacts (name, phone) VALUES (?, ?)",
-            name,
-            phone
-          );
-        }
-        resetForm();
-        fetchContacts();
-      } catch (err) {
-        console.log("Save contact error:", err);
+      } else {
+        await db.runAsync(
+          "INSERT INTO contacts (name, email, phone, type, icon) VALUES (?, ?, ?, ?, ?)",
+          name,
+          email,
+          phone,
+          type,
+          selectedIcon
+        );
       }
-    };
-  
-    const resetForm = () => {
-      setName("");
-      setPhone("");
-      setEditingId(null);
-      setModalVisible(false);
-    };
-  
-    const confirmDelete = (id: number) => {
-      Alert.alert("Delete Contact", "Are you sure you want to delete this contact?", [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            await db.runAsync("DELETE FROM contacts WHERE id = ?", id);
-            fetchContacts();
-          },
+      resetForm();
+      fetchContacts();
+    } catch (err) {
+      console.log("Save contact error:", err);
+    }
+  };
+
+  const resetForm = () => {
+    setName("");
+    setEmail("");
+    setPhone("");
+    setType("");
+    setSelectedIcon("restaurant");
+    setEditingId(null);
+    setModalVisible(false);
+  };
+
+  const confirmDelete = (id: number) => {
+    Alert.alert("Delete Contact", "Are you sure you want to delete this contact?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          await db.runAsync("DELETE FROM contacts WHERE id = ?", id);
+          fetchContacts();
         },
-      ]);
-    };
-  
-    const startEditing = (item: any) => {
-      setName(item.name);
-      setPhone(item.phone);
-      setEditingId(item.id);
-      setModalVisible(true);
-    };
-  
-    const makeCall = (phone: string) => {
-      Linking.openURL(`tel:${phone}`);
-    };
-  
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>Contact Manager</Text>
-  
-        {contacts.length === 0 ? (
-          <Text style={{ textAlign: "center", marginTop: 20 }}>No contacts found.</Text>
-        ) : (
-          <FlatList
-            data={contacts}
-            keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={{ paddingBottom: 80 }}
-            renderItem={({ item }) => (
-              <View style={styles.contactItem}>
+      },
+    ]);
+  };
+
+  const startEditing = (item: any) => {
+    setName(item.name);
+    setEmail(item.email);
+    setPhone(item.phone);
+    setType(item.type);
+    setSelectedIcon(item.icon || "restaurant");
+    setEditingId(item.id);
+    setModalVisible(true);
+    setViewModalVisible(false);
+  };
+
+  const openContactView = (item: any) => {
+    setViewingContact(item);
+    setViewModalVisible(true);
+  };
+
+  const makeCall = (phone: string) => {
+    Linking.openURL(`tel:${phone}`);
+  };
+
+  const copyToClipboard = (text: string) => {
+    Clipboard.setStringAsync(text);
+    Alert.alert("Copied", `\"${text}\" copied to clipboard.`);
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>Contact Manager</Text>
+      {contacts.length === 0 ? (
+        <Text style={{ textAlign: "center", marginTop: 20 }}>No contacts found.</Text>
+      ) : (
+        <FlatList
+          data={contacts}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={{ paddingBottom: 80 }}
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => openContactView(item)} style={styles.contactItem}>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Ionicons
+                  name={item.icon || "person"}
+                  size={24}
+                  color="#2196F3"
+                  style={{ marginRight: 10 }}
+                />
                 <View>
                   <Text style={styles.contactText}>{item.name}</Text>
-                  <Text style={styles.contactPhone}>{item.phone}</Text>
+                  <Text style={styles.contactPhone}>Email: {item.email}</Text>
+                  <Text style={styles.contactPhone}>Phone: {item.phone}</Text>
+                  <Text style={styles.contactPhone}>Type: {item.type}</Text>
                 </View>
-                <View style={styles.iconGroup}>
-                  <TouchableOpacity onPress={() => makeCall(item.phone)}>
-                    <Ionicons name="call" size={22} color="#2196F3" style={styles.icon} />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => startEditing(item)}>
+              </View>
+              <View style={styles.iconGroup}>
+                <TouchableOpacity onPress={() => makeCall(item.phone)}>
+                  <Ionicons name="call" size={22} color="#2196F3" style={styles.icon} />
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          )}
+        />
+      )}
+
+      <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
+        <Ionicons name="add-circle" size={28} color="#2196F3" />
+        <Text style={styles.addButtonText}>Add Contact</Text>
+      </TouchableOpacity>
+
+      <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={resetForm}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{editingId !== null ? "Edit Contact" : "Add Contact"}</Text>
+            <TextInput style={styles.input} placeholder="Name" value={name} onChangeText={setName} />
+            <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" />
+            <TextInput style={styles.input} placeholder="Phone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+            <TextInput style={styles.input} placeholder="Type (e.g. Front Desk)" value={type} onChangeText={setType} />
+            <Text style={{ fontWeight: "bold", marginVertical: 10 }}>Select Icon:</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 10 }}>
+              {hospitalityIcons.map((icon) => (
+                <TouchableOpacity key={icon} onPress={() => setSelectedIcon(icon)}>
+                  <Ionicons
+                    name={icon as any}
+                    size={30}
+                    color={selectedIcon === icon ? "#2196F3" : "#888"}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: selectedIcon === icon ? "#2196F3" : "#ccc",
+                      padding: 5,
+                      borderRadius: 8,
+                    }}
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity style={styles.saveButton} onPress={saveContact}>
+              <Text style={styles.addButtonText}>{editingId !== null ? "Update" : "Save"}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={resetForm}>
+              <Text style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* View Contact Modal */}
+      <Modal animationType="fade" transparent={true} visible={viewModalVisible} onRequestClose={() => setViewModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Contact Details</Text>
+            {viewingContact && (
+              <>
+                <View style={{ alignItems: "center", marginBottom: 16 }}>
+                  <Ionicons name={viewingContact.icon || "person"} size={50} color="#2196F3" />
+                  <Text style={styles.contactText}>{viewingContact.name}</Text>
+                </View>
+                <Text style={styles.contactPhone}>Email: {viewingContact.email}</Text>
+                <TouchableOpacity onPress={() => copyToClipboard(viewingContact.email)}>
+                  <Text style={styles.addButtonText}>Copy Email</Text>
+                </TouchableOpacity>
+                <Text style={styles.contactPhone}>Phone: {viewingContact.phone}</Text>
+                <TouchableOpacity onPress={() => copyToClipboard(viewingContact.phone)}>
+                  <Text style={styles.addButtonText}>Copy Phone</Text>
+                </TouchableOpacity>
+                <Text style={styles.contactPhone}>Type: {viewingContact.type}</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 }}>
+                  <TouchableOpacity onPress={() => startEditing(viewingContact)}>
                     <Ionicons name="create" size={22} color="green" style={styles.icon} />
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => confirmDelete(item.id)}>
+                  <TouchableOpacity onPress={() => confirmDelete(viewingContact.id)}>
                     <Ionicons name="trash" size={22} color="red" style={styles.icon} />
                   </TouchableOpacity>
                 </View>
-              </View>
+                <TouchableOpacity onPress={() => setViewModalVisible(false)}>
+                  <Text style={styles.cancelText}>Close</Text>
+                </TouchableOpacity>
+              </>
             )}
-          />
-        )}
-  
-        <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-          <Ionicons name="add-circle" size={28} color="#2196F3" />
-          <Text style={styles.addButtonText}>Add Contact</Text>
-        </TouchableOpacity>
-  
-        <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={resetForm}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>{editingId !== null ? "Edit Contact" : "Add Contact"}</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Name"
-                value={name}
-                onChangeText={setName}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Phone"
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-              />
-              <TouchableOpacity style={styles.saveButton} onPress={saveContact}>
-                <Text style={styles.saveButtonText}>{editingId !== null ? "Update" : "Save"}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={resetForm}>
-                <Text style={styles.cancelText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
           </View>
-        </Modal>
-      </SafeAreaView>
-    );
-  }
-  
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: 16,
-      backgroundColor: "#fff",
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: "bold",
-      marginBottom: 20,
-      color: "#2196F3",
-      textAlign: "center",
-    },
-    addButton: {
-      position: "absolute",
-      bottom: 20,
-      alignSelf: "center",
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: "#e3f2fd",
-      borderRadius: 30,
-      paddingHorizontal: 20,
-      paddingVertical: 10,
-      gap: 10,
-    },
-    addButtonText: {
-      color: "#2196F3",
-      fontSize: 16,
-      fontWeight: "600",
-    },
-    contactItem: {
-      backgroundColor: "#f1f8ff",
-      padding: 16,
-      borderRadius: 10,
-      marginBottom: 12,
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    contactText: {
-      fontSize: 18,
-      fontWeight: "bold",
-    },
-    contactPhone: {
-      fontSize: 14,
-      color: "#555",
-      marginTop: 2,
-    },
-    iconGroup: {
-      flexDirection: "row",
-      gap: 10,
-    },
-    icon: {
-      padding: 4,
-    },
-    modalContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: "rgba(0,0,0,0.5)",
-    },
-    modalContent: {
-      width: "80%",
-      backgroundColor: "white",
-      borderRadius: 10,
-      padding: 20,
-    },
-    modalTitle: {
-      fontSize: 18,
-      fontWeight: "600",
-      marginBottom: 20,
-      textAlign: "center",
-    },
-    input: {
-      borderWidth: 1,
-      borderColor: "#ddd",
-      borderRadius: 8,
-      padding: 12,
-      marginBottom: 12,
-    },
-    saveButton: {
-      backgroundColor: "#2196F3",
-      borderRadius: 8,
-      paddingVertical: 12,
-      alignItems: "center",
-    },
-    saveButtonText: {
-      color: "#fff",
-      fontSize: 16,
-      fontWeight: "600",
-    },
-    cancelText: {
-      color: "red",
-      fontSize: 14,
-      textAlign: "center",
-      marginTop: 10,
-    },
-  });
+        </View>
+      </Modal>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingTop: "10%",
+    padding: 16,
+    backgroundColor: "#fff",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    color: "#2196F3",
+    textAlign: "center",
+  },
+  addButton: {
+    position: "absolute",
+    bottom: 20,
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#e3f2fd",
+    borderRadius: 30,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    gap: 10,
+  },
+  addButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  contactItem: {
+    backgroundColor: "#f1f8ff",
+    padding: 16,
+    borderRadius: 10,
+    marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  contactText: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  contactPhone: {
+    fontSize: 14,
+    color: "#555",
+    marginTop: 2,
+  },
+  iconGroup: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  icon: {
+    padding: 4,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContent: {
+    width: "85%",
+    backgroundColor: "white",
+    borderRadius: 10,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+  saveButton: {
+    backgroundColor: "#2196F3",
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  cancelText: {
+    color: "red",
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 10,
+  },
+});
