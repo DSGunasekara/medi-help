@@ -16,6 +16,11 @@ import { LineChart } from 'react-native-chart-kit';
 import { useSQLiteContext } from 'expo-sqlite';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import { useRouter } from "expo-router";
+import {
+	Smile, Droplet, Activity, Thermometer, Settings,
+	Search, Phone, Pill, Home, User
+  } from 'lucide-react-native';
 
 type WeightEntry = {
   id: number;
@@ -26,6 +31,11 @@ type WeightEntry = {
 export default function WeightScreen() {
   const db = useSQLiteContext();
   const screenWidth = Dimensions.get('window').width;
+
+  const router = useRouter();
+  const PURPLE = '#9C27B0';
+  const PURPLE_LIGHT = '#f3e5f5';
+  const PURPLE_DARK = '#6A1B9A';
 
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [weight, setWeight] = useState('');
@@ -126,9 +136,9 @@ export default function WeightScreen() {
       <html>
         <head>
           <style>
-            h1 { text-align: center; color: #2196F3; }
+            h1 { text-align: center; color: ${PURPLE}; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
-            th { background-color: #2196F3; color: white; text-align: left; padding: 8px; }
+            th { background-color: ${PURPLE}; color: white; text-align: left; padding: 8px; }
             td { padding: 8px; border-bottom: 1px solid #ccc; }
             tr:hover { background-color: #f1f1f1; }
           </style>
@@ -151,21 +161,20 @@ export default function WeightScreen() {
     acc[curr.date] = {
       marked: true,
       selected: curr.date === selectedDate,
-      selectedColor: '#2196F3',
+      selectedColor: PURPLE,
       customStyles: {
-        container: { backgroundColor: '#E3F2FD' },
+        container: { backgroundColor: PURPLE_LIGHT },
         text: { color: '#000' },
       },
     };
     return acc;
   }, {} as Record<string, any>);
 
-  // Chart for the selected month
   const chartData = (() => {
-    const month = selectedDate.slice(0, 7); // YYYY-MM
+    const month = selectedDate.slice(0, 7);
     const filtered = entries.filter(e => e.date.startsWith(month));
     return {
-      labels: filtered.map(e => e.date.slice(8)), // day only
+      labels: filtered.map(e => e.date.slice(8)),
       datasets: [{ data: filtered.map(e => e.weight) }]
     };
   })();
@@ -182,7 +191,7 @@ export default function WeightScreen() {
             [selectedDate]: {
               ...(markedDates[selectedDate] || {}),
               selected: true,
-              selectedColor: '#2196F3',
+              selectedColor: PURPLE,
             },
           }}
           markingType="custom"
@@ -197,9 +206,9 @@ export default function WeightScreen() {
             height={220}
             yAxisSuffix="kg"
             chartConfig={{
-              backgroundColor: '#2196F3',
-              backgroundGradientFrom: '#64b5f6',
-              backgroundGradientTo: '#1976d2',
+              backgroundColor: PURPLE,
+              backgroundGradientFrom: '#BA68C8',
+              backgroundGradientTo: '#4A148C',
               decimalPlaces: 1,
               color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
               labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
@@ -245,6 +254,19 @@ export default function WeightScreen() {
           </View>
         </View>
       </Modal>
+    <View style={styles.bottomNav}>
+          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/home")}>
+            <Home size={24} color="white" /><Text style={styles.navText}>Home</Text></TouchableOpacity>
+  
+          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/weights")}>
+            <Activity size={24} color="white" /><Text style={styles.navText}>Weight</Text></TouchableOpacity>
+  
+          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/medications")}>
+            <Pill size={24} color="white" /><Text style={styles.navText}>Meds</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/profile")}>
+            <User size={24} color="white" /><Text style={styles.navText}>Profile</Text></TouchableOpacity>
+         </View>
+
     </SafeAreaView>
   );
 }
@@ -255,13 +277,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     margin: 16,
-    color: '#2196F3',
+    color: '#9C27B0',
     textAlign: 'center',
+    paddingTop: "5%",
   },
   chartTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2196F3',
+    color: '#9C27B0',
     textAlign: 'center',
     marginTop: 16,
   },
@@ -272,14 +295,14 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   pdfButton: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#f3e5f5',
     margin: 16,
     borderRadius: 24,
     paddingVertical: 12,
     alignItems: 'center',
   },
   pdfButtonText: {
-    color: '#2196F3',
+    color: '#9C27B0',
     fontWeight: '600',
     fontSize: 16,
   },
@@ -308,7 +331,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   saveButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#9C27B0',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -319,7 +342,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   deleteButton: {
-    backgroundColor: '#ef4444',
+    backgroundColor: '#6A1B9A',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -328,4 +351,15 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
   },
+  bottomNav: {
+		position: 'absolute', bottom: 0, left: 0, right: 0,
+		backgroundColor: '#9C27B0', flexDirection: 'row', justifyContent: 'space-around',
+		paddingVertical: 12, borderTopLeftRadius: 16, borderTopRightRadius: 16,
+	  },
+	  navButton: {
+		alignItems: 'center',
+	  },
+	  navText: {
+		color: 'white', fontSize: 12, marginTop: 4,
+	  }
 });
