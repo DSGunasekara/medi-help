@@ -8,6 +8,12 @@ import { BarChart } from 'react-native-chart-kit';
 import { useSQLiteContext } from 'expo-sqlite';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import {
+  Smile, Droplet, Activity, Thermometer, Settings,
+  Search, Phone, Pill, Home, User
+} from 'lucide-react-native';
+import { Link, useRouter } from "expo-router";
+
 
 const moodLevels = [
   { emoji: '😢', label: 'Sad' },
@@ -26,7 +32,7 @@ type MoodEntry = {
 export default function MoodScreen() {
   const db = useSQLiteContext();
   const screenWidth = Dimensions.get('window').width;
-
+ const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedMood, setSelectedMood] = useState('');
   const [comment, setComment] = useState('');
@@ -256,12 +262,25 @@ export default function MoodScreen() {
           </View>
         </View>
       </Modal>
+      
+      <View style={styles.bottomNav}>
+          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/home")}>
+            <Home size={24} color="white" /><Text style={styles.navText}>Home</Text></TouchableOpacity>
+  
+          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/moods")}>
+            <Smile size={24} color="white" /><Text style={styles.navText}>Moods</Text></TouchableOpacity>
+  
+          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/medications")}>
+            <Pill size={24} color="white" /><Text style={styles.navText}>Meds</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/profile")}>
+            <User size={24} color="white" /><Text style={styles.navText}>Profile</Text></TouchableOpacity>
+         </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: '#fff', paddingTop: "5%" },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -365,4 +384,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
   },
+  bottomNav: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: '#FFA500', flexDirection: 'row', justifyContent: 'space-around',
+    paddingVertical: 12, borderTopLeftRadius: 16, borderTopRightRadius: 16,
+  },
+  navButton: {
+    alignItems: 'center',
+  },
+  navText: {
+    color: 'white', fontSize: 12, marginTop: 4,
+  }
 });
