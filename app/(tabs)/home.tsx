@@ -101,7 +101,7 @@ export default function Screen() {
             <Text style={styles.tileText}>Contacts</Text>
           </TouchableOpacity>
         </Link>
-        <Link href="/(tabs)/medications" asChild>
+        <Link href="/medicationToday" asChild>
           <TouchableOpacity style={styles.tile}>
             <Pill size={32} color="white" />
             <Text style={styles.tileText}>Medication</Text>
