@@ -15,8 +15,14 @@ import { useEffect, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
-
+import { Link } from "expo-router";
+import {
+  Smile, Droplet, Activity, Thermometer, Settings,
+  Search, Phone, Pill, Home, User
+} from 'lucide-react-native';
+import { useRouter } from "expo-router";
 export default function ContactsScreen() {
+  const router = useRouter();
   const db = useSQLiteContext();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -30,30 +36,20 @@ export default function ContactsScreen() {
   const [viewModalVisible, setViewModalVisible] = useState(false);
 
   const hospitalityIcons = [
-    "restaurant",
-    "bed",
-    "briefcase",
-    "cafe",
-    "concierge-bell",
-    "wine",
-    "broom",
-    "car",
-    "bus",
-    "person",
+    "restaurant", "bed", "briefcase", "cafe", "concierge-bell",
+    "wine", "broom", "car", "bus", "person"
   ];
 
   useEffect(() => {
     (async () => {
-      await db.runAsync(
-        `CREATE TABLE IF NOT EXISTS contacts (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT,
-          email TEXT,
-          phone TEXT,
-          type TEXT,
-          icon TEXT
-        )`
-      );
+      await db.runAsync(`CREATE TABLE IF NOT EXISTS contacts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        email TEXT,
+        phone TEXT,
+        type TEXT,
+        icon TEXT
+      )`);
       fetchContacts();
     })();
   }, []);
@@ -69,21 +65,12 @@ export default function ContactsScreen() {
       if (editingId !== null) {
         await db.runAsync(
           "UPDATE contacts SET name = ?, email = ?, phone = ?, type = ?, icon = ? WHERE id = ?",
-          name,
-          email,
-          phone,
-          type,
-          selectedIcon,
-          editingId
+          name, email, phone, type, selectedIcon, editingId
         );
       } else {
         await db.runAsync(
           "INSERT INTO contacts (name, email, phone, type, icon) VALUES (?, ?, ?, ?, ?)",
-          name,
-          email,
-          phone,
-          type,
-          selectedIcon
+          name, email, phone, type, selectedIcon
         );
       }
       resetForm();
@@ -94,48 +81,34 @@ export default function ContactsScreen() {
   };
 
   const resetForm = () => {
-    setName("");
-    setEmail("");
-    setPhone("");
-    setType("");
+    setName(""); setEmail(""); setPhone(""); setType("");
     setSelectedIcon("restaurant");
-    setEditingId(null);
-    setModalVisible(false);
+    setEditingId(null); setModalVisible(false);
   };
 
   const confirmDelete = (id: number) => {
-    Alert.alert("Delete Contact", "Are you sure you want to delete this contact?", [
+    Alert.alert("Delete Contact", "Are you sure?", [
       { text: "Cancel", style: "cancel" },
       {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
+        text: "Delete", style: "destructive", onPress: async () => {
           await db.runAsync("DELETE FROM contacts WHERE id = ?", id);
           fetchContacts();
-        },
+        }
       },
     ]);
   };
 
   const startEditing = (item: any) => {
-    setName(item.name);
-    setEmail(item.email);
-    setPhone(item.phone);
-    setType(item.type);
-    setSelectedIcon(item.icon || "restaurant");
-    setEditingId(item.id);
-    setModalVisible(true);
-    setViewModalVisible(false);
+    setName(item.name); setEmail(item.email); setPhone(item.phone);
+    setType(item.type); setSelectedIcon(item.icon || "restaurant");
+    setEditingId(item.id); setModalVisible(true); setViewModalVisible(false);
   };
 
   const openContactView = (item: any) => {
-    setViewingContact(item);
-    setViewModalVisible(true);
+    setViewingContact(item); setViewModalVisible(true);
   };
 
-  const makeCall = (phone: string) => {
-    Linking.openURL(`tel:${phone}`);
-  };
+  const makeCall = (phone: string) => Linking.openURL(`tel:${phone}`);
 
   const copyToClipboard = (text: string) => {
     Clipboard.setStringAsync(text);
@@ -145,213 +118,70 @@ export default function ContactsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Contact Manager</Text>
-      {contacts.length === 0 ? (
-        <Text style={{ textAlign: "center", marginTop: 20 }}>No contacts found.</Text>
-      ) : (
-        <FlatList
-          data={contacts}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={{ paddingBottom: 80 }}
-          renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => openContactView(item)} style={styles.contactItem}>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Ionicons
-                  name={item.icon || "person"}
-                  size={24}
-                  color="#2196F3"
-                  style={{ marginRight: 10 }}
-                />
-                <View>
-                  <Text style={styles.contactText}>{item.name}</Text>
-                  <Text style={styles.contactPhone}>Email: {item.email}</Text>
-                  <Text style={styles.contactPhone}>Phone: {item.phone}</Text>
-                  <Text style={styles.contactPhone}>Type: {item.type}</Text>
-                </View>
+      <FlatList
+        data={contacts}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={{ paddingBottom: 120 }}
+        renderItem={({ item }) => (
+          <TouchableOpacity onPress={() => openContactView(item)} style={styles.contactItem}>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Ionicons name={item.icon || "person"} size={24} color="#2196F3" style={{ marginRight: 10 }} />
+              <View>
+                <Text style={styles.contactText}>{item.name}</Text>
+                <Text style={styles.contactPhone}>Email: {item.email}</Text>
+                <Text style={styles.contactPhone}>Phone: {item.phone}</Text>
+                <Text style={styles.contactPhone}>Type: {item.type}</Text>
               </View>
-              <View style={styles.iconGroup}>
-                <TouchableOpacity onPress={() => makeCall(item.phone)}>
-                  <Ionicons name="call" size={22} color="#2196F3" style={styles.icon} />
-                </TouchableOpacity>
-              </View>
+            </View>
+            <TouchableOpacity onPress={() => makeCall(item.phone)}>
+              <Ionicons name="call" size={22} color="#2196F3" style={styles.icon} />
             </TouchableOpacity>
-          )}
-        />
-      )}
+          </TouchableOpacity>
+        )}
+      />
 
       <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
         <Ionicons name="add-circle" size={28} color="#2196F3" />
         <Text style={styles.addButtonText}>Add Contact</Text>
       </TouchableOpacity>
 
-      <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={resetForm}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{editingId !== null ? "Edit Contact" : "Add Contact"}</Text>
-            <TextInput style={styles.input} placeholder="Name" value={name} onChangeText={setName} />
-            <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" />
-            <TextInput style={styles.input} placeholder="Phone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
-            <TextInput style={styles.input} placeholder="Type (e.g. Front Desk)" value={type} onChangeText={setType} />
-            <Text style={{ fontWeight: "bold", marginVertical: 10 }}>Select Icon:</Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 10 }}>
-              {hospitalityIcons.map((icon) => (
-                <TouchableOpacity key={icon} onPress={() => setSelectedIcon(icon)}>
-                  <Ionicons
-                    name={icon as any}
-                    size={30}
-                    color={selectedIcon === icon ? "#2196F3" : "#888"}
-                    style={{
-                      borderWidth: 1,
-                      borderColor: selectedIcon === icon ? "#2196F3" : "#ccc",
-                      padding: 5,
-                      borderRadius: 8,
-                    }}
-                  />
-                </TouchableOpacity>
-              ))}
-            </View>
-            <TouchableOpacity style={styles.saveButton} onPress={saveContact}>
-              <Text style={styles.addButtonText}>{editingId !== null ? "Update" : "Save"}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={resetForm}>
-              <Text style={styles.cancelText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <View style={styles.bottomNav}>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/home")}>
+          <Home size={24} color="white" /><Text style={styles.navText}>Home</Text></TouchableOpacity>
 
-      {/* View Contact Modal */}
-      <Modal animationType="fade" transparent={true} visible={viewModalVisible} onRequestClose={() => setViewModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Contact Details</Text>
-            {viewingContact && (
-              <>
-                <View style={{ alignItems: "center", marginBottom: 16 }}>
-                  <Ionicons name={viewingContact.icon || "person"} size={50} color="#2196F3" />
-                  <Text style={styles.contactText}>{viewingContact.name}</Text>
-                </View>
-                <Text style={styles.contactPhone}>Email: {viewingContact.email}</Text>
-                <TouchableOpacity onPress={() => copyToClipboard(viewingContact.email)}>
-                  <Text style={styles.addButtonText}>Copy Email</Text>
-                </TouchableOpacity>
-                <Text style={styles.contactPhone}>Phone: {viewingContact.phone}</Text>
-                <TouchableOpacity onPress={() => copyToClipboard(viewingContact.phone)}>
-                  <Text style={styles.addButtonText}>Copy Phone</Text>
-                </TouchableOpacity>
-           
-                <Text style={styles.contactPhone}>Type: {viewingContact.type}</Text>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 }}>
-                  <TouchableOpacity onPress={() => startEditing(viewingContact)}>
-                    <Ionicons name="create" size={22} color="green" style={styles.icon} />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => confirmDelete(viewingContact.id)}>
-                    <Ionicons name="trash" size={22} color="red" style={styles.icon} />
-                  </TouchableOpacity>
-                </View>
-                <TouchableOpacity onPress={() => setViewModalVisible(false)}>
-                  <Text style={styles.cancelText}>Close</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/contacts")}>
+          <Phone size={24} color="white" /><Text style={styles.navText}>Contacts</Text></TouchableOpacity>
+
+        <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/medications")}>
+          <Pill size={24} color="white" /><Text style={styles.navText}>Meds</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/profile")}>
+          <User size={24} color="white" /><Text style={styles.navText}>Profile</Text></TouchableOpacity>
+       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: "10%",
-    padding: 16,
-    backgroundColor: "#fff",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    color: "#2196F3",
-    textAlign: "center",
-  },
+  container: { flex: 1, paddingTop: "10%", padding: 16, backgroundColor: "#fff" },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20, color: "#2196F3", textAlign: "center" },
   addButton: {
-    position: "absolute",
-    bottom: 20,
-    alignSelf: "center",
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#e3f2fd",
-    borderRadius: 30,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    gap: 10,
+    position: "absolute", bottom: 80, alignSelf: "center",
+    flexDirection: "row", alignItems: "center", backgroundColor: "#e3f2fd",
+    borderRadius: 30, paddingHorizontal: 20, paddingVertical: 10, gap: 10,
   },
-  addButtonText: {
-    color: "#black",
-    fontSize: 16,
-    fontWeight: "600",
-  },
+  addButtonText: { color: "#000", fontSize: 16, fontWeight: "600" },
   contactItem: {
-    backgroundColor: "#f1f8ff",
-    padding: 16,
-    borderRadius: 10,
-    marginBottom: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    backgroundColor: "#f1f8ff", padding: 16, borderRadius: 10, marginBottom: 12,
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
-  contactText: {
-    fontSize: 18,
-    fontWeight: "bold",
+  contactText: { fontSize: 18, fontWeight: "bold" },
+  contactPhone: { fontSize: 14, color: "#555", marginTop: 2 },
+  icon: { padding: 4 },
+  bottomNav: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: '#2196F3', flexDirection: 'row', justifyContent: 'space-around',
+    paddingVertical: 12, borderTopLeftRadius: 16, borderTopRightRadius: 16,
   },
-  contactPhone: {
-    fontSize: 14,
-    color: "#555",
-    marginTop: 2,
-  },
-  iconGroup: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  icon: {
-    padding: 4,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  modalContent: {
-    width: "85%",
-    backgroundColor: "white",
-    borderRadius: 10,
-    padding: 20,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-  },
-  saveButton: {
-    backgroundColor: "#2196F3",
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  cancelText: {
-    color: "red",
-    fontSize: 14,
-    textAlign: "center",
-    marginTop: 10,
-  },
+  navButton: { alignItems: 'center' },
+  navText: { color: 'white', fontSize: 12, marginTop: 4 },
 });

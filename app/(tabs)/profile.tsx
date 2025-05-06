@@ -5,9 +5,15 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useSQLiteContext } from 'expo-sqlite';
+import {
+  Smile, Droplet, Activity, Thermometer, Settings,
+  Search, Phone, Pill, Home, User
+} from 'lucide-react-native';
+import { Link, useRouter } from "expo-router";
 
 export default function ProfileScreen() {
   const db = useSQLiteContext();
+  const router = useRouter();
 
   const [profile, setProfile] = useState({
     fullName: '',
@@ -122,6 +128,20 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+
+               <View style={styles.bottomNav}>
+                 <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/home")}>
+                   <Home size={24} color="white" /><Text style={styles.navText}>Home</Text></TouchableOpacity>
+         
+                 <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/contacts")}>
+                   <Phone size={24} color="white" /><Text style={styles.navText}>Contacts</Text></TouchableOpacity>
+         
+                 <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/medications")}>
+                   <Pill size={24} color="white" /><Text style={styles.navText}>Meds</Text></TouchableOpacity>
+                 <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/profile")}>
+                   <User size={24} color="white" /><Text style={styles.navText}>Profile</Text></TouchableOpacity>
+                </View>
+
     </SafeAreaView>
   );
 }
@@ -190,4 +210,11 @@ const styles = StyleSheet.create({
   },
   saveButtonText: { color: 'white', fontWeight: '600' },
   cancelText: { color: '#999', marginTop: 8 },
+  bottomNav: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: '#2196F3', flexDirection: 'row', justifyContent: 'space-around',
+    paddingVertical: 12, borderTopLeftRadius: 16, borderTopRightRadius: 16,
+  },
+  navButton: { alignItems: 'center' },
+  navText: { color: 'white', fontSize: 12, marginTop: 4 },
 });

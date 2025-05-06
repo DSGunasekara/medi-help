@@ -108,20 +108,18 @@ export default function Screen() {
         </Link>
       </View>
 
-      <View style={styles.bottomNav}>
-        <Link href="/(tabs)/home" asChild>
-          <TouchableOpacity style={styles.navButton}><Home size={24} color="white" /><Text style={styles.navText}>Home</Text></TouchableOpacity>
-        </Link>
-        <Link href="/(tabs)/contacts" asChild>
-          <TouchableOpacity style={styles.navButton}><Phone size={24} color="white" /><Text style={styles.navText}>Contacts</Text></TouchableOpacity>
-        </Link>
-        <Link href="/(tabs)/medications" asChild>
-          <TouchableOpacity style={styles.navButton}><Pill size={24} color="white" /><Text style={styles.navText}>Meds</Text></TouchableOpacity>
-        </Link>
-        <Link href="/(tabs)/profile" asChild>
-          <TouchableOpacity style={styles.navButton}><User size={24} color="white" /><Text style={styles.navText}>Profile</Text></TouchableOpacity>
-        </Link>
-      </View>
+        <View style={styles.bottomNav}>
+          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/home")}>
+            <Home size={24} color="white" /><Text style={styles.navText}>Home</Text></TouchableOpacity>
+  
+          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/contacts")}>
+            <Phone size={24} color="white" /><Text style={styles.navText}>Contacts</Text></TouchableOpacity>
+  
+          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/medications")}>
+            <Pill size={24} color="white" /><Text style={styles.navText}>Meds</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/profile")}>
+            <User size={24} color="white" /><Text style={styles.navText}>Profile</Text></TouchableOpacity>
+         </View>
     </SafeAreaView>
   );
 }
