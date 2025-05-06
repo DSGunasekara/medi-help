@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
-  TextInput, Alert, ScrollView, Modal, Platform
+  TextInput, Alert, ScrollView, KeyboardAvoidingView, Platform
 } from 'react-native';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useRouter } from 'expo-router';
-import { Calendar } from 'react-native-calendars';
 
 export default function UserProfileForm() {
   const db = useSQLiteContext();
@@ -18,8 +17,6 @@ export default function UserProfileForm() {
     email: '',
     dob: '',
   });
-
-  const [calendarVisible, setCalendarVisible] = useState(false);
 
   useEffect(() => {
     db.runAsync(`
@@ -34,22 +31,32 @@ export default function UserProfileForm() {
     `);
   }, []);
 
-interface FormState {
-	fullName: string;
-	contact: string;
-	bloodType: string;
-	email: string;
-	dob: string;
-}
+  interface FormState {
+    fullName: string;
+    contact: string;
+    bloodType: string;
+    email: string;
+    dob: string;
+  }
 
-const handleChange = (key: keyof FormState, value: string) => {
-	setForm({ ...form, [key]: value });
-};
+  const handleChange = (key: keyof FormState, value: string) => {
+    setForm({ ...form, [key]: value });
+  };
+
+  const isValidDate = (dateStr: string) => {
+    const regex = /^\d{4}-\d{2}-\d{2}$/;
+    return regex.test(dateStr);
+  };
 
   const handleSave = async () => {
     const { fullName, contact, bloodType, email, dob } = form;
     if (!fullName || !contact || !bloodType || !email || !dob) {
       Alert.alert('Validation', 'Please fill in all fields');
+      return;
+    }
+
+    if (!isValidDate(dob)) {
+      Alert.alert('Validation', 'DOB must be in YYYY-MM-DD format');
       return;
     }
 
@@ -69,84 +76,81 @@ const handleChange = (key: keyof FormState, value: string) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.loginContentContainer}>
-        <Text style={styles.headerTitle}>New Account</Text>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={styles.headerTitle}>New Account</Text>
 
-        <View style={styles.formContainer}>
-          <Text style={styles.inputLabel}>Full Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="John Doe"
-            value={form.fullName}
-            onChangeText={(val) => handleChange('fullName', val)}
-            keyboardType="name-phone-pad"
-            autoCapitalize="words"
-          />
+          <View style={styles.formContainer}>
+            <Text style={styles.inputLabel}>Full Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="John Doe"
+              value={form.fullName}
+              onChangeText={(val) => handleChange('fullName', val)}
+              keyboardType="name-phone-pad"
+              autoCapitalize="words"
+            />
 
-          <Text style={styles.inputLabel}>Phone Number</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="+61785254"
-            value={form.contact}
-            onChangeText={(val) => handleChange('contact', val)}
-            keyboardType="phone-pad"
-          />
+            <Text style={styles.inputLabel}>Phone Number</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="+61785254"
+              value={form.contact}
+              onChangeText={(val) => handleChange('contact', val)}
+              keyboardType="phone-pad"
+            />
 
-          <Text style={styles.inputLabel}>Blood Type</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="A+"
-            value={form.bloodType}
-            onChangeText={(val) => handleChange('bloodType', val)}
-          />
+            <Text style={styles.inputLabel}>Blood Type</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="A+"
+              value={form.bloodType}
+              onChangeText={(val) => handleChange('bloodType', val)}
+            />
 
-          <Text style={styles.inputLabel}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="example@example.com"
-            value={form.email}
-            onChangeText={(val) => handleChange('email', val)}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+            <Text style={styles.inputLabel}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="example@example.com"
+              value={form.email}
+              onChangeText={(val) => handleChange('email', val)}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
 
-          <Text style={styles.inputLabel}>Date of Birth</Text>
-          <TouchableOpacity style={styles.input} onPress={() => setCalendarVisible(true)}>
-            <Text style={{ color: form.dob ? '#000' : '#999' }}>{form.dob || 'Select Date of Birth'}</Text>
-          </TouchableOpacity>
+            <Text style={styles.inputLabel}>Date of Birth (YYYY-MM-DD)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="1990-01-01"
+              value={form.dob}
+              onChangeText={(val) => {
+                let cleaned = val.replace(/[^0-9]/g, '');
 
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={calendarVisible}
-            onRequestClose={() => setCalendarVisible(false)}
-          >
-            <View style={styles.modalOverlay}>
-			  <View style={styles.modalCalendar}>
-				<Calendar
-				  onDayPress={(day: { dateString: string }) => {
-					handleChange('dob', day.dateString);
-					setCalendarVisible(false);
-				  }}
-				  markedDates={{
-					[form.dob]: {
-					  selected: true,
-					  selectedColor: '#2196F3'
-					}
-				  }}
-				/>
-				<TouchableOpacity onPress={() => setCalendarVisible(false)} style={styles.modalCloseBtn}>
-				  <Text style={styles.modalCloseText}>Close</Text>
-				</TouchableOpacity>
-			  </View>
-            </View>
-          </Modal>
+                if (cleaned.length > 4 && cleaned.length <= 6) {
+                  cleaned = cleaned.slice(0, 4) + '-' + cleaned.slice(4);
+                } else if (cleaned.length > 6) {
+                  cleaned = cleaned.slice(0, 4) + '-' + cleaned.slice(4, 6) + '-' + cleaned.slice(6, 8);
+                }
 
-          <TouchableOpacity style={styles.loginButton} onPress={handleSave}>
-            <Text style={styles.loginButtonText}>Sign Up</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+                if (cleaned.length > 10) cleaned = cleaned.slice(0, 10);
+
+                handleChange('dob', cleaned);
+              }}
+              keyboardType="numeric"
+            />
+
+            <TouchableOpacity style={styles.loginButton} onPress={handleSave}>
+              <Text style={styles.loginButtonText}>Sign Up</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -156,10 +160,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-  loginContentContainer: {
-    flex: 1,
+  scrollContainer: {
     paddingHorizontal: 20,
     paddingTop: 20,
+    paddingBottom: 40,
   },
   headerTitle: {
     textAlign: "center",
@@ -196,25 +200,5 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  modalCalendar: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 10,
-    width: '90%'
-  },
-  modalCloseBtn: {
-    marginTop: 10,
-    alignItems: 'center'
-  },
-  modalCloseText: {
-    color: '#2196F3',
-    fontWeight: '600'
   }
 });

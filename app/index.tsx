@@ -40,11 +40,11 @@ export default function Screen() {
         <Text style={styles.welcomeText}>We are so excited to have you here. If you haven't already, create an account to get start.</Text>
 
         <View style={styles.buttonContainer}>
-          <Link href="/login" asChild>
+          {/* <Link href="/login" asChild>
             <TouchableOpacity style={styles.primaryButton}>
               <Text style={styles.primaryButtonText}>Log In</Text>
             </TouchableOpacity>
-          </Link>
+          </Link> */}
 
           <Link href="/register" asChild>
             <TouchableOpacity style={styles.secondaryButton}>

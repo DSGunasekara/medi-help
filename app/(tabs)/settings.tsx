@@ -37,6 +37,29 @@ export default function SettingsScreen() {
     );
   };
 
+  const handleClearUserProfile = () => {
+    Alert.alert(
+      "Delete User Profile",
+      "Are you sure you want to permanently delete user profile data?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await db.runAsync("DROP TABLE IF EXISTS user_profile");
+              Alert.alert("Success", "User profile has been deleted.");
+            } catch (err) {
+              console.log("Error deleting user_profile table:", err);
+              Alert.alert("Error", "Failed to delete user profile.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.warningText}>
@@ -47,6 +70,10 @@ export default function SettingsScreen() {
 
       <TouchableOpacity style={styles.clearButton} onPress={handleClearContacts}>
         <Text style={styles.clearButtonText}>Clear All Contacts</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.clearButton} onPress={handleClearUserProfile}>
+        <Text style={styles.clearButtonText}>Clear User Profile</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.homeButton} onPress={() => router.push("/home")}>
