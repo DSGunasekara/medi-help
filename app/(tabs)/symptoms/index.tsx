@@ -7,6 +7,14 @@ import { Calendar } from 'react-native-calendars';
 import { useSQLiteContext } from 'expo-sqlite';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import { Feather } from '@expo/vector-icons';
+
+import { useRouter } from "expo-router"; // <-- Add this for navigation
+
+import {
+	Smile, Droplet, Activity, Thermometer, Settings,
+	Search, Phone, Pill, Home, User
+  } from 'lucide-react-native';
 
 type SymptomEntry = {
   id: number;
@@ -17,6 +25,8 @@ type SymptomEntry = {
 
 export default function SymptomsScreen() {
   const db = useSQLiteContext();
+  const router = useRouter();
+
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [symptom, setSymptom] = useState('');
   const [description, setDescription] = useState('');
@@ -36,7 +46,7 @@ export default function SymptomsScreen() {
   }, []);
 
   const fetchSymptoms = async () => {
-    const result = await db.getAllAsync<SymptomEntry>('SELECT * FROM symptom_log ORDER BY date');
+    const result = await db.getAllAsync<SymptomEntry>('SELECT * FROM symptom_log ORDER BY date DESC');
     setEntries(result);
   };
 
@@ -136,24 +146,58 @@ export default function SymptomsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        <Text style={styles.title}>Symptoms Tracker</Text>
+      <Text style={styles.title}>Symptoms Tracker</Text>
 
-        <Calendar
-          onDayPress={onDayPress}
-          markedDates={{
-            ...markedDates,
-            [selectedDate]: {
-              ...(markedDates[selectedDate] || {}),
-              selected: true,
-              selectedColor: '#4caf50',
-            },
-          }}
-        />
+      <Calendar
+        onDayPress={onDayPress}
+        markedDates={{
+          ...markedDates,
+          [selectedDate]: {
+            ...(markedDates[selectedDate] || {}),
+            selected: true,
+            selectedColor: '#4caf50',
+          },
+        }}
+      />
 
-        <TouchableOpacity style={styles.pdfButton} onPress={generatePDF}>
-          <Text style={styles.pdfButtonText}>Download Report</Text>
-        </TouchableOpacity>
+      <TouchableOpacity style={styles.pdfButton} onPress={generatePDF}>
+        <Text style={styles.pdfButtonText}>Download Report</Text>
+      </TouchableOpacity>
+
+      <ScrollView style={styles.symptomScroll} contentContainerStyle={{ paddingBottom: 40 }}>
+        <View style={styles.symptomList}>
+          {entries.map((entry) => (
+            <View key={entry.id} style={styles.symptomItem}>
+              <View style={styles.symptomTextContainer}>
+                <Text style={styles.symptomDate}>{entry.date}</Text>
+                <Text style={styles.symptomTitle}>{entry.symptom}</Text>
+                <Text style={styles.symptomDescription}>{entry.description}</Text>
+              </View>
+              <View style={styles.iconActions}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectedDate(entry.date);
+                    setSymptom(entry.symptom);
+                    setDescription(entry.description);
+                    setEditingEntry(entry);
+                    setModalVisible(true);
+                  }}
+                >
+                  <Feather name="edit" size={20} color="#4caf50" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    setEditingEntry(entry);
+                    confirmDelete();
+                  }}
+                  style={{ marginLeft: 16 }}
+                >
+                  <Feather name="trash-2" size={20} color="#ef4444" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
+        </View>
       </ScrollView>
 
       <Modal visible={modalVisible} transparent animationType="slide">
@@ -194,6 +238,18 @@ export default function SymptomsScreen() {
           </View>
         </View>
       </Modal>
+        <View style={styles.bottomNav}>
+                <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/home")}>
+                  <Home size={24} color="white" /><Text style={styles.navText}>Home</Text></TouchableOpacity>
+        
+                <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/symptoms")}>
+                  <Thermometer size={24} color="white" /><Text style={styles.navText}>Symptoms</Text></TouchableOpacity>
+        
+                <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/medications")}>
+                  <Pill size={24} color="white" /><Text style={styles.navText}>Meds</Text></TouchableOpacity>
+                <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/profile")}>
+                  <User size={24} color="white" /><Text style={styles.navText}>Profile</Text></TouchableOpacity>
+               </View>
     </SafeAreaView>
   );
 }
@@ -206,6 +262,7 @@ const styles = StyleSheet.create({
     margin: 16,
     color: '#4caf50',
     textAlign: 'center',
+    paddingTop: "5%",
   },
   pdfButton: {
     backgroundColor: '#e8f5e9',
@@ -218,6 +275,45 @@ const styles = StyleSheet.create({
     color: '#4caf50',
     fontWeight: '600',
     fontSize: 16,
+  },
+  symptomScroll: {
+    flex: 1,
+    marginTop: 8,
+  },
+  symptomList: {
+    marginHorizontal: 16,
+    marginTop: 8,
+  },
+  symptomItem: {
+    backgroundColor: '#f1f8e9',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  symptomTextContainer: {
+    flex: 1,
+  },
+  symptomDate: {
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 4,
+  },
+  symptomTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2e7d32',
+  },
+  symptomDescription: {
+    fontSize: 14,
+    color: '#555',
+    marginTop: 4,
+  },
+  iconActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   modalContainer: {
     flex: 1, justifyContent: 'center', alignItems: 'center',
@@ -274,4 +370,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
   },
+  bottomNav: {
+		position: 'absolute', bottom: 0, left: 0, right: 0,
+		backgroundColor: '#4caf50', flexDirection: 'row', justifyContent: 'space-around',
+		paddingVertical: 12, borderTopLeftRadius: 16, borderTopRightRadius: 16,
+	  },
+	  navButton: {
+		alignItems: 'center',
+	  },
+	  navText: {
+		color: 'white', fontSize: 12, marginTop: 4,
+	  }
 });
