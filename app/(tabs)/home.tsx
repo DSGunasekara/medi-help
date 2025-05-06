@@ -57,8 +57,9 @@ export default function Screen() {
       <View style={styles.header}>
         <Text style={styles.userName}>Hello, {userName}!</Text>
         <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton}><Search size={22} color="#2196F3" /></TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}><Settings size={22} color="#2196F3" /></TouchableOpacity>
+        {/* <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/profile")}> */}
+          <TouchableOpacity style={styles.iconButton}><Search size={22} color="#2196F3" onPress={() => router.replace("/settings")} /></TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}><Settings size={22} color="#2196F3"  onPress={() => router.replace("/settings")}/></TouchableOpacity>
         </View>
       </View>
 
