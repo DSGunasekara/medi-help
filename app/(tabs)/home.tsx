@@ -1,20 +1,46 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link } from 'expo-router';
+import React, { useEffect, useState } from "react";
+import { SafeAreaView, StyleSheet, TouchableOpacity, View, TextInput } from "react-native";
+import { Text } from "react-native";
+
+import { Link, useRouter } from "expo-router";
+import { useSQLiteContext } from "expo-sqlite";
 import {
   Smile, Droplet, Activity, Thermometer, Settings,
   Search, Phone, Pill
 } from 'lucide-react-native';
-import motivationQuotes from './motivationTalks'; // <-- Import from motivation.tsx
+import motivationQuotes from './motivationTalks';
 
-const GITHUB_AVATAR_URI = "https://i.pinimg.com/originals/ef/a2/8d/efa28d18a04e7fa40ed49eeb0ab660db.jpg";
+export default function Screen() {
+  const db = useSQLiteContext();
+  const router = useRouter();
+  const [userName, setUserName] = useState("");
+  const [currentQuote, setCurrentQuote] = useState("");
 
-const HomePage: React.FC = () => {
-  const userName = 'John Doe';
-  const profilePicUrl = GITHUB_AVATAR_URI;
+  useEffect(() => {
+    const fetchUserName = async () => {
+      try {
+        await db.runAsync(`CREATE TABLE IF NOT EXISTS user_profile (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          fullName TEXT,
+          contact TEXT,
+          bloodType TEXT,
+          email TEXT,
+          dob TEXT
+        )`);
 
-  const [currentQuote, setCurrentQuote] = useState<string>("");
+        const existing = await db.getAllAsync<{ fullName?: string }>('SELECT * FROM user_profile LIMIT 1');
+        if (existing.length > 0 && existing[0]?.fullName) {
+          setUserName(existing[0].fullName);
+        } else {
+          setUserName("Guest");
+        }
+      } catch (error) {
+        console.error("Failed to fetch user full name:", error);
+        setUserName("Guest");
+      }
+    };
+    fetchUserName();
+  }, []);
 
   useEffect(() => {
     const updateQuote = () => {
@@ -31,12 +57,7 @@ const HomePage: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Link href="/(tabs)/profile" asChild>
-          <TouchableOpacity>
-            <Image source={{ uri: profilePicUrl }} style={styles.profilePic} />
-          </TouchableOpacity>
-        </Link>
-        <Text style={styles.userName}>Hello, {userName}</Text>
+        <Text style={styles.userName}>Hello, {userName}!</Text>
         <View style={styles.headerIcons}>
           <TouchableOpacity style={styles.iconButton}><Search size={22} color="#2196F3" /></TouchableOpacity>
           <TouchableOpacity style={styles.iconButton}><Settings size={22} color="#2196F3" /></TouchableOpacity>
@@ -46,7 +67,7 @@ const HomePage: React.FC = () => {
       <TextInput style={styles.searchBar} placeholder="Search..." placeholderTextColor="#999" />
 
       <View style={styles.motivationPanel}>
-        <Smile size={28} color="#2196F3" />
+        <Smile size={24} color="#2196F3" />
         <Text style={styles.motivationText}>{currentQuote}</Text>
       </View>
 
@@ -82,20 +103,19 @@ const HomePage: React.FC = () => {
           </TouchableOpacity>
         </Link>
         <Link href="/(tabs)/medications" asChild>
-        <TouchableOpacity style={styles.tile}>
-          <Pill size={32} color="white" />
-          <Text style={styles.tileText}>Medication</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.tile}>
+            <Pill size={32} color="white" />
+            <Text style={styles.tileText}>Medication</Text>
+          </TouchableOpacity>
         </Link>
       </View>
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f0f4f8', padding: 16 },
+  container: { flex: 1, backgroundColor: '#f0f4f8', padding: 16, paddingTop: "15%" },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  profilePic: { width: 50, height: 50, borderRadius: 25, marginRight: 12 },
   userName: { flex: 1, fontSize: 18, fontWeight: 'bold' },
   headerIcons: { flexDirection: 'row', gap: 12 },
   iconButton: { padding: 6 },
@@ -124,5 +144,3 @@ const styles = StyleSheet.create({
     color: 'white', marginTop: 8, fontSize: 14, textAlign: 'center',
   },
 });
-
-export default HomePage;
