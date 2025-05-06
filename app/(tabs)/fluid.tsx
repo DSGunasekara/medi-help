@@ -3,6 +3,11 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, SafeAreaView, StatusBar, TouchableOpacity, Modal, TextInput } from "react-native";
 import { useRouter } from "expo-router"; // <-- Add this for navigation
 
+import {
+	Smile, Droplet, Activity, Thermometer, Settings,
+	Search, Phone, Pill, Home, User
+  } from 'lucide-react-native';
+
 export default function Tab() {
 	const db = useSQLiteContext();
 	const router = useRouter();
@@ -145,6 +150,19 @@ export default function Tab() {
 			</Modal>
 
 			<StatusBar />
+			
+			<View style={styles.bottomNav}>
+          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/home")}>
+            <Home size={24} color="white" /><Text style={styles.navText}>Home</Text></TouchableOpacity>
+  
+          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/fluid")}>
+            <Droplet size={24} color="white" /><Text style={styles.navText}>Fluid</Text></TouchableOpacity>
+  
+          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/medications")}>
+            <Pill size={24} color="white" /><Text style={styles.navText}>Meds</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/profile")}>
+            <User size={24} color="white" /><Text style={styles.navText}>Profile</Text></TouchableOpacity>
+         </View>
 		</SafeAreaView>
 	);
 }
@@ -153,17 +171,21 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: "#fff",
+		paddingTop: "5%",
 	},
 	header: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-		paddingHorizontal: 16,
-		paddingVertical: 12,
+		fontSize: 20,
+		fontWeight: 'bold',
+		margin: 16,
+		textAlign: 'center',
 	},
 	headerTitle: {
-		fontSize: 18,
-		fontWeight: "600",
+		fontSize: 20,
+		fontWeight: 'bold',
+		margin: 16,
+		textAlign: 'center',
+		// fontSize: 18,
+		// fontWeight: "600",
 		color: "#2196F3",
 	},
 	iconContainer: {
@@ -195,12 +217,15 @@ const styles = StyleSheet.create({
 		color: "#2196F3",
 		fontSize: 16,
 		fontWeight: "600",
+		// paddingBottom: "50",
 	},
 	gaugeContainer: {
+		paddingTop: "30%",
+		paddingBottom: "10%",
 		flex: 1,
 		alignItems: "center",
-		justifyContent: "center",
-		paddingVertical: 30,
+		// justifyContent: "center",
+		paddingVertical: 20,
 	},
 	gaugeBackground: {
 		width: 200,
@@ -220,9 +245,12 @@ const styles = StyleSheet.create({
 		backgroundColor: "#2196F3",
 	},
 	gaugeContent: {
-		position: "absolute",
 		alignItems: "center",
 		justifyContent: "center",
+		position: "absolute",
+		top: "25%",
+		// alignItems: "center",
+		// justifyContent: "center",
 	},
 	gaugeAmount: {
 		fontSize: 16,
@@ -244,7 +272,7 @@ const styles = StyleSheet.create({
 		borderRadius: 24,
 		paddingVertical: 14,
 		marginHorizontal: 16,
-		marginBottom: 20,
+		marginBottom: "25%",
 		alignItems: "center",
 	},
 	addIntakeButtonText: {
@@ -297,4 +325,15 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		fontWeight: "600",
 	},
+	bottomNav: {
+		position: 'absolute', bottom: 0, left: 0, right: 0,
+		backgroundColor: '#2196F3', flexDirection: 'row', justifyContent: 'space-around',
+		paddingVertical: 12, borderTopLeftRadius: 16, borderTopRightRadius: 16,
+	  },
+	  navButton: {
+		alignItems: 'center',
+	  },
+	  navText: {
+		color: 'white', fontSize: 12, marginTop: 4,
+	  }
 });
