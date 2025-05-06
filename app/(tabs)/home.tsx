@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { SafeAreaView, StyleSheet, TouchableOpacity, View, TextInput } from "react-native";
 import { Text } from "react-native";
-
 import { Link, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import {
   Smile, Droplet, Activity, Thermometer, Settings,
-  Search, Phone, Pill
+  Search, Phone, Pill, Home, User
 } from 'lucide-react-native';
 import motivationQuotes from './motivationTalks';
 
@@ -28,7 +27,7 @@ export default function Screen() {
           dob TEXT
         )`);
 
-        const existing = await db.getAllAsync<{ fullName?: string }>('SELECT * FROM user_profile LIMIT 1');
+        const existing = await db.getAllAsync<{ fullName: string }>('SELECT * FROM user_profile LIMIT 1');
         if (existing.length > 0 && existing[0]?.fullName) {
           setUserName(existing[0].fullName);
         } else {
@@ -48,9 +47,8 @@ export default function Screen() {
       setCurrentQuote(motivationQuotes[randomIndex]);
     };
 
-    updateQuote(); // Show first quote immediately
-    const intervalId = setInterval(updateQuote, 30000); // Update every 30 sec
-
+    updateQuote();
+    const intervalId = setInterval(updateQuote, 30000);
     return () => clearInterval(intervalId);
   }, []);
 
@@ -109,12 +107,27 @@ export default function Screen() {
           </TouchableOpacity>
         </Link>
       </View>
+
+      <View style={styles.bottomNav}>
+        <Link href="/(tabs)/home" asChild>
+          <TouchableOpacity style={styles.navButton}><Home size={24} color="white" /><Text style={styles.navText}>Home</Text></TouchableOpacity>
+        </Link>
+        <Link href="/(tabs)/contacts" asChild>
+          <TouchableOpacity style={styles.navButton}><Phone size={24} color="white" /><Text style={styles.navText}>Contacts</Text></TouchableOpacity>
+        </Link>
+        <Link href="/(tabs)/medications" asChild>
+          <TouchableOpacity style={styles.navButton}><Pill size={24} color="white" /><Text style={styles.navText}>Meds</Text></TouchableOpacity>
+        </Link>
+        <Link href="/(tabs)/profile" asChild>
+          <TouchableOpacity style={styles.navButton}><User size={24} color="white" /><Text style={styles.navText}>Profile</Text></TouchableOpacity>
+        </Link>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f0f4f8', padding: 16, paddingTop: "15%" },
+  container: { flex: 1, backgroundColor: '#f0f4f8', padding: 16, paddingBottom: 80, paddingTop: "15%"},
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   userName: { flex: 1, fontSize: 18, fontWeight: 'bold' },
   headerIcons: { flexDirection: 'row', gap: 12 },
@@ -143,4 +156,15 @@ const styles = StyleSheet.create({
   tileText: {
     color: 'white', marginTop: 8, fontSize: 14, textAlign: 'center',
   },
+  bottomNav: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: '#2196F3', flexDirection: 'row', justifyContent: 'space-around',
+    paddingVertical: 12, borderTopLeftRadius: 16, borderTopRightRadius: 16,
+  },
+  navButton: {
+    alignItems: 'center',
+  },
+  navText: {
+    color: 'white', fontSize: 12, marginTop: 4,
+  }
 });
