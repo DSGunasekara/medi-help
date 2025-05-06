@@ -238,6 +238,7 @@ export default function ContactsScreen() {
                 <TouchableOpacity onPress={() => copyToClipboard(viewingContact.phone)}>
                   <Text style={styles.addButtonText}>Copy Phone</Text>
                 </TouchableOpacity>
+           
                 <Text style={styles.contactPhone}>Type: {viewingContact.type}</Text>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 }}>
                   <TouchableOpacity onPress={() => startEditing(viewingContact)}>
@@ -286,7 +287,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   addButtonText: {
-    color: "white",
+    color: "#black",
     fontSize: 16,
     fontWeight: "600",
   },

@@ -81,10 +81,12 @@ const HomePage: React.FC = () => {
             <Text style={styles.tileText}>Contacts</Text>
           </TouchableOpacity>
         </Link>
+        <Link href="/(tabs)/medications" asChild>
         <TouchableOpacity style={styles.tile}>
           <Pill size={32} color="white" />
           <Text style={styles.tileText}>Medication</Text>
         </TouchableOpacity>
+        </Link>
       </View>
     </SafeAreaView>
   );
