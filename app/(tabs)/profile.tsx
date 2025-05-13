@@ -6,10 +6,9 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { useSQLiteContext } from 'expo-sqlite';
 import {
-  Smile, Droplet, Activity, Thermometer, Settings,
-  Search, Phone, Pill, Home, User
+  Home, Phone, Pill, User
 } from 'lucide-react-native';
-import { Link, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 
 export default function ProfileScreen() {
   const db = useSQLiteContext();
@@ -27,6 +26,7 @@ export default function ProfileScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingField, setEditingField] = useState('');
   const [inputValue, setInputValue] = useState('');
+  const [dropdownVisible, setDropdownVisible] = useState(false);
 
   useEffect(() => {
     db.runAsync(`
@@ -46,8 +46,50 @@ export default function ProfileScreen() {
     if (result.length > 0) setProfile(result[0]);
   };
 
+  const validateField = (): boolean => {
+    const value = inputValue.trim();
+
+    switch (editingField) {
+      case 'fullName':
+        if (!value) {
+          Alert.alert('Validation Error', 'Full Name cannot be empty.');
+          return false;
+        }
+        break;
+      case 'contact':
+        if (!/^\d{10}$/.test(value)) {
+          Alert.alert('Validation Error', 'Contact must be a 10-digit number.');
+          return false;
+        }
+        break;
+      case 'bloodType':
+        if (!/^(A|B|AB|O)[+-]$/.test(value.toUpperCase())) {
+          Alert.alert('Validation Error', 'Blood Type must be A+, A-, B+, B-, AB+, AB-, O+ or O-.');
+          return false;
+        }
+        break;
+      case 'email':
+        if (!/^\S+@\S+\.\S+$/.test(value)) {
+          Alert.alert('Validation Error', 'Please enter a valid email address.');
+          return false;
+        }
+        break;
+      case 'dob':
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+          Alert.alert('Validation Error', 'Date of Birth must be in YYYY-MM-DD format.');
+          return false;
+        }
+        break;
+      default:
+        return true;
+    }
+    return true;
+  };
+
   const saveField = async () => {
-    const updated = { ...profile, [editingField]: inputValue };
+    if (!validateField()) return;
+
+    const updated = { ...profile, [editingField]: inputValue.trim() };
     setProfile(updated);
     const existing = await db.getAllAsync('SELECT * FROM user_profile LIMIT 1') as Array<{ id: number }>;
 
@@ -113,12 +155,58 @@ export default function ProfileScreen() {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Edit {editingField}</Text>
-            <TextInput
-              style={styles.input}
-              value={inputValue}
-              onChangeText={setInputValue}
-              placeholder={`Enter ${editingField}`}
-            />
+
+            {editingField === 'bloodType' ? (
+              <>
+                <TouchableOpacity
+                  style={[styles.input, { justifyContent: 'center' }]}
+                  onPress={() => setDropdownVisible(true)}
+                >
+                  <Text>{inputValue || 'Select Blood Type'}</Text>
+                </TouchableOpacity>
+
+                <Modal visible={dropdownVisible} transparent animationType="fade">
+                  <TouchableOpacity
+                    style={styles.dropdownOverlay}
+                    onPress={() => setDropdownVisible(false)}
+                    activeOpacity={1}
+                  >
+                    <View style={styles.dropdown}>
+                      {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((type) => (
+                        <TouchableOpacity
+                          key={type}
+                          style={styles.dropdownItem}
+                          onPress={() => {
+                            setInputValue(type);
+                            setDropdownVisible(false);
+                          }}
+                        >
+                          <Text>{type}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </TouchableOpacity>
+                </Modal>
+              </>
+            ) : (
+              <TextInput
+                style={styles.input}
+                value={inputValue}
+                onChangeText={(text) => {
+                  if (editingField === 'dob') {
+                    let formatted = text.replace(/[^\d]/g, '').slice(0, 8);
+                    if (formatted.length >= 5) formatted = `${formatted.slice(0, 4)}-${formatted.slice(4, 6)}-${formatted.slice(6, 8)}`;
+                    else if (formatted.length >= 4) formatted = `${formatted.slice(0, 4)}-${formatted.slice(4)}`;
+                    setInputValue(formatted);
+                  } else {
+                    setInputValue(text);
+                  }
+                }}
+                placeholder={`Enter ${editingField}`}
+                keyboardType={editingField === 'contact' || editingField === 'dob' ? 'numeric' : 'default'}
+              />
+            )}
+
             <TouchableOpacity style={styles.saveButton} onPress={saveField}>
               <Text style={styles.saveButtonText}>Save</Text>
             </TouchableOpacity>
@@ -129,19 +217,16 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-               <View style={styles.bottomNav}>
-                 <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/home")}>
-                   <Home size={24} color="white" /><Text style={styles.navText}>Home</Text></TouchableOpacity>
-         
-                 <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/contacts")}>
-                   <Phone size={24} color="white" /><Text style={styles.navText}>Contacts</Text></TouchableOpacity>
-         
-                 <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/medications")}>
-                   <Pill size={24} color="white" /><Text style={styles.navText}>Meds</Text></TouchableOpacity>
-                 <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/profile")}>
-                   <User size={24} color="white" /><Text style={styles.navText}>Profile</Text></TouchableOpacity>
-                </View>
-
+      <View style={styles.bottomNav}>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/home")}>
+          <Home size={24} color="white" /><Text style={styles.navText}>Home</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/contacts")}>
+          <Phone size={24} color="white" /><Text style={styles.navText}>Contacts</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/medications")}>
+          <Pill size={24} color="white" /><Text style={styles.navText}>Meds</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/profile")}>
+          <User size={24} color="white" /><Text style={styles.navText}>Profile</Text></TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -155,18 +240,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginVertical: 16,
   },
-  imageContainer: {
-    alignSelf: 'center',
-    marginBottom: 20,
-  },
-  image: {
-    width: 100, height: 100, borderRadius: 50,
-  },
+  imageContainer: { alignSelf: 'center', marginBottom: 20 },
+  image: { width: 100, height: 100, borderRadius: 50 },
   placeholder: {
     width: 100, height: 100, borderRadius: 50,
-    backgroundColor: '#eee',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center',
   },
   fieldBox: {
     backgroundColor: '#e3f2fd',
@@ -185,16 +263,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-    width: '80%',
-    alignItems: 'center',
+    backgroundColor: 'white', padding: 20, borderRadius: 10,
+    width: '80%', alignItems: 'center',
   },
   modalTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
+    fontSize: 16, fontWeight: '600', marginBottom: 12,
   },
   input: {
     borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
@@ -202,11 +275,8 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: '#2196F3',
-    paddingVertical: 12,
-    borderRadius: 8,
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 10,
+    paddingVertical: 12, borderRadius: 8, width: '100%',
+    alignItems: 'center', marginBottom: 10,
   },
   saveButtonText: { color: 'white', fontWeight: '600' },
   cancelText: { color: '#999', marginTop: 8 },
@@ -217,4 +287,21 @@ const styles = StyleSheet.create({
   },
   navButton: { alignItems: 'center' },
   navText: { color: 'white', fontSize: 12, marginTop: 4 },
+  dropdownOverlay: {
+    flex: 1, justifyContent: 'center', alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  dropdown: {
+    backgroundColor: 'white',
+    width: 200,
+    borderRadius: 8,
+    paddingVertical: 10,
+    elevation: 4,
+  },
+  dropdownItem: {
+    padding: 12,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
 });
