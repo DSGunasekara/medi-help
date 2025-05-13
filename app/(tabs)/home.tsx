@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { SafeAreaView, StyleSheet, TouchableOpacity, View, TextInput } from "react-native";
-import { Text } from "react-native";
+import { SafeAreaView, StyleSheet, TouchableOpacity, View, TextInput, Text } from "react-native";
 import { Link, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import {
@@ -14,6 +13,18 @@ export default function Screen() {
   const router = useRouter();
   const [userName, setUserName] = useState("");
   const [currentQuote, setCurrentQuote] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const allTiles = [
+    { label: "Mood Tracking", icon: <Smile size={32} color="white" />, href: "/(tabs)/moods" },
+    { label: "Fluid Tracking", icon: <Droplet size={32} color="white" />, href: "/(tabs)/fluid" },
+    { label: "Weight Report", icon: <Activity size={32} color="white" />, href: "/(tabs)/weights" },
+    { label: "Symptoms", icon: <Thermometer size={32} color="white" />, href: "/(tabs)/symptoms" },
+    { label: "Contacts", icon: <Phone size={32} color="white" />, href: "/(tabs)/contacts" },
+    { label: "Medication", icon: <Pill size={32} color="white" />, href: "/medicationToday" }
+  ];
+
+  const [filteredTiles, setFilteredTiles] = useState(allTiles);
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -26,7 +37,6 @@ export default function Screen() {
           email TEXT,
           dob TEXT
         )`);
-
         const existing = await db.getAllAsync<{ fullName: string }>('SELECT * FROM user_profile LIMIT 1');
         if (existing.length > 0 && existing[0]?.fullName) {
           setUserName(existing[0].fullName);
@@ -46,24 +56,39 @@ export default function Screen() {
       const randomIndex = Math.floor(Math.random() * motivationQuotes.length);
       setCurrentQuote(motivationQuotes[randomIndex]);
     };
-
     updateQuote();
     const intervalId = setInterval(updateQuote, 30000);
     return () => clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    const filtered = allTiles.filter(tile =>
+      tile.label.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredTiles(filtered);
+  }, [searchTerm]);
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.userName}>Hello, {userName}!</Text>
         <View style={styles.headerIcons}>
-        {/* <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/profile")}> */}
-          <TouchableOpacity style={styles.iconButton}><Search size={22} color="#2196F3" onPress={() => router.replace("/settings")} /></TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}><Settings size={22} color="#2196F3"  onPress={() => router.replace("/settings")}/></TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Search size={22} color="#2196F3" onPress={() => { }} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Settings size={22} color="#2196F3" onPress={() => router.replace("/settings")} />
+          </TouchableOpacity>
         </View>
       </View>
 
-      <TextInput style={styles.searchBar} placeholder="Search..." placeholderTextColor="#999" />
+      <TextInput
+        style={styles.searchBar}
+        placeholder="Search..."
+        placeholderTextColor="#999"
+        value={searchTerm}
+        onChangeText={setSearchTerm}
+      />
 
       <View style={styles.motivationPanel}>
         <Smile size={24} color="#2196F3" />
@@ -71,62 +96,45 @@ export default function Screen() {
       </View>
 
       <View style={styles.tilesContainer}>
-        <Link href="/(tabs)/moods" asChild>
-          <TouchableOpacity style={styles.tile}>
-            <Smile size={32} color="white" />
-            <Text style={styles.tileText}>Mood Tracking</Text>
-          </TouchableOpacity>
-        </Link>
-        <Link href="/(tabs)/fluid" asChild>
-          <TouchableOpacity style={styles.tile}>
-            <Droplet size={32} color="white" />
-            <Text style={styles.tileText}>Fluid Tracking</Text>
-          </TouchableOpacity>
-        </Link>
-        <Link href="/(tabs)/weights" asChild>
-          <TouchableOpacity style={styles.tile}>
-            <Activity size={32} color="white" />
-            <Text style={styles.tileText}>Weight Report</Text>
-          </TouchableOpacity>
-        </Link>
-        <Link href="/(tabs)/symptoms" asChild>
-          <TouchableOpacity style={styles.tile}>
-            <Thermometer size={32} color="white" />
-            <Text style={styles.tileText}>Symptoms</Text>
-          </TouchableOpacity>
-        </Link>
-        <Link href="/(tabs)/contacts" asChild>
-          <TouchableOpacity style={styles.tile}>
-            <Phone size={32} color="white" />
-            <Text style={styles.tileText}>Contacts</Text>
-          </TouchableOpacity>
-        </Link>
-        <Link href="/medicationToday" asChild>
-          <TouchableOpacity style={styles.tile}>
-            <Pill size={32} color="white" />
-            <Text style={styles.tileText}>Medication</Text>
-          </TouchableOpacity>
-        </Link>
+        {filteredTiles.length === 0 ? (
+          <Text style={{ textAlign: 'center', color: '#555', width: '100%', marginTop: 20 }}>
+            No matching feature found.
+          </Text>
+        ) : (
+          filteredTiles.map((tile, index) => (
+            <Link href={tile.href} asChild key={index}>
+              <TouchableOpacity style={styles.tile}>
+                {tile.icon}
+                <Text style={styles.tileText}>{tile.label}</Text>
+              </TouchableOpacity>
+            </Link>
+          ))
+        )}
       </View>
 
-        <View style={styles.bottomNav}>
-          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/home")}>
-            <Home size={24} color="white" /><Text style={styles.navText}>Home</Text></TouchableOpacity>
-  
-          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/contacts")}>
-            <Phone size={24} color="white" /><Text style={styles.navText}>Contacts</Text></TouchableOpacity>
-  
-          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/medications")}>
-            <Pill size={24} color="white" /><Text style={styles.navText}>Meds</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/profile")}>
-            <User size={24} color="white" /><Text style={styles.navText}>Profile</Text></TouchableOpacity>
-         </View>
+      <View style={styles.bottomNav}>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/home")}>
+          <Home size={24} color="white" /><Text style={styles.navText}>Home</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/contacts")}>
+          <Phone size={24} color="white" /><Text style={styles.navText}>Contacts</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/medications")}>
+          <Pill size={24} color="white" /><Text style={styles.navText}>Meds</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.navButton} onPress={() => router.replace("/(tabs)/profile")}>
+          <User size={24} color="white" /><Text style={styles.navText}>Profile</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f0f4f8', padding: 16, paddingBottom: 80, paddingTop: "15%"},
+  container: { flex: 1, backgroundColor: '#f0f4f8', padding: 16, paddingBottom: 80, paddingTop: "15%" },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   userName: { flex: 1, fontSize: 18, fontWeight: 'bold' },
   headerIcons: { flexDirection: 'row', gap: 12 },
